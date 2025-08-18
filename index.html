@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Gremio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          typography: ({ theme }) => ({
+            invert: {
+              css: {
+                '--tw-prose-body': theme('colors.gray[300]'),
+                '--tw-prose-headings': theme('colors.white'),
+                '--tw-prose-lead': theme('colors.gray[400]'),
+                '--tw-prose-links': theme('colors.indigo[400]'),
+                '--tw-prose-bold': theme('colors.white'),
+                '--tw-prose-counters': theme('colors.gray[400]'),
+                '--tw-prose-bullets': theme('colors.gray[400]'),
+                '--tw-prose-hr': theme('colors.gray[700]'),
+                '--tw-prose-quotes': theme('colors.gray[200]'),
+                '--tw-prose-quote-borders': theme('colors.gray[600]'),
+                '--tw-prose-captions': theme('colors.gray[400]'),
+                '--tw-prose-code': theme('colors.white'),
+                '--tw-prose-pre-code': theme('colors.gray[300]'),
+                '--tw-prose-pre-bg': theme('colors.gray[800]'),
+                '--tw-prose-th-borders': theme('colors.gray[600]'),
+                '--tw-prose-td-borders': theme('colors.gray[700]'),
+              },
+            },
+          }),
+        },
+      },
+      plugins: [
+        require('@tailwindcss/typography'),
+      ],
+    }
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.14.0"
+  }
+}
+</script>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

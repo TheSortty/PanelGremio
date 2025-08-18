@@ -1,0 +1,5 @@
+{
+  "name": "Panel del Gremio",
+  "description": "Un panel para gestionar un gremio de MMORPG, incluyendo actividad de miembros, builds de personajes y mapa estratégico.",
+  "requestFramePermissions": []
+}
