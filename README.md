@@ -1,72 +1,83 @@
+# Panel del Gremio - Documentación del Proyecto
 
-# Panel del Gremio - Documentación del Frontend
-
-Este documento proporciona una descripción completa del proyecto frontend del Panel del Gremio, sus características y la especificación detallada de la API del backend necesaria para su funcionamiento.
+Este documento proporciona una descripción completa del proyecto Panel del Gremio, incluyendo su frontend, el backend que lo soporta y las instrucciones para ponerlo en marcha.
 
 ## 1. Descripción General
 
 El Panel del Gremio es una aplicación web de página única (SPA) diseñada para gestionar gremios en juegos MMORPG. Ofrece herramientas para visualizar la actividad de los miembros, crear y compartir builds de personajes, planificar estrategias en un mapa interactivo y administrar el acceso de los usuarios.
 
-Este frontend está construido con **React**, **TypeScript** y **Tailwind CSS**, y está diseñado para ser moderno, responsivo y completamente desacoplado de la lógica de negocio, la cual debe ser implementada en un backend.
+-   **Frontend**: Construido con **React**, **TypeScript** y **Tailwind CSS**. Es una interfaz moderna, responsiva y completamente desacoplada de la lógica de negocio.
+-   **Backend**: Construido con **Node.js**, **Express** y **TypeScript**. Proporciona una API RESTful para todas las funcionalidades del frontend y utiliza una base de datos simulada en memoria para facilitar el desarrollo y la demostración.
 
-## 2. Características Disponibles en el Frontend
+---
 
-La interfaz de usuario actual soporta las siguientes funcionalidades:
+## 2. Puesta en Marcha y Ejecución Local
 
--   **Dashboard Principal**:
-    -   Visualización de estadísticas clave (miembros totales, miembros en línea).
-    -   Tabla de actividad reciente de los miembros del gremio.
-    -   Tarjeta de anuncio para el próximo evento importante (ej. ZvZ).
+Para ejecutar el proyecto completo, necesitas correr el backend y el frontend simultáneamente.
 
--   **Gestión de Builds de Personajes**:
-    -   **Crear Builds**: Un formulario completo para crear nuevas builds, incluyendo título, descripción, categoría y autor.
-    -   **Selector de Ítems Dinámico**: Componente de búsqueda que consulta al backend en tiempo real para encontrar y seleccionar ítems (armas, armaduras, consumibles).
-    -   **Listar y Ver Builds**: Galería de todas las builds guardadas, con visualización detallada del equipamiento y las habilidades.
-    -   **Guía por IA**: Funcionalidad para generar una guía de juego detallada para cualquier build utilizando la IA de Gemini (la llamada a la API se realiza de forma segura a través del backend).
+### Requisitos
 
--   **Mapa Estratégico Interactivo**:
-    -   Un mapa del mundo del juego donde los usuarios pueden colocar marcadores.
-    -   Selector de tipo de marcador para planificar diferentes estrategias: rutas de **transporte**, puntos de **gank** o **objetivos** clave.
-    -   Los marcadores se pueden añadir y eliminar con un clic.
+-   Node.js (v18 o superior)
+-   npm (o un gestor de paquetes similar)
+-   Una clave de API de Google Gemini
 
--   **Métricas de Actividad (Sección de Administradores)**:
-    -   Gráfico de barras que muestra la actividad de los miembros por día de la semana.
-    -   Mapa de calor que visualiza las horas de mayor conexión de los miembros.
-    -   Modales interactivos para ver la lista de miembros activos en un período específico.
+### Paso 1: Configurar y Ejecutar el Backend
 
--   **Administración de Usuarios (Sección de Administradores)**:
-    -   Tabla para listar todos los usuarios registrados.
-    -   Filtros para visualizar usuarios por estado (todos, pendientes, activos).
-    -   Acciones para **aprobar** o **rechazar** nuevas solicitudes de registro.
-    -   Capacidad para cambiar el **rol** de un usuario y **eliminarlo**.
+1.  **Navega a la carpeta del backend**:
+    ```bash
+    cd backend
+    ```
 
--   **Registro de Auditoría (Sección de Administradores)**:
-    -   Un historial detallado de todas las acciones administrativas importantes realizadas en el panel (ej. cambio de rol, eliminación de usuario).
+2.  **Instala las dependencias**:
+    ```bash
+    npm install
+    ```
 
--   **Sistema de Autenticación Completo**:
-    -   Flujo de inicio de sesión con nombre de usuario.
-    -   Flujo de registro que crea una cuenta con estado "pendiente" para aprobación.
-    -   Integración preparada para un flujo de autenticación OAuth con **Steam**.
-    -   Gestión de sesiones persistentes a través de cookies manejadas por el backend.
+3.  **Configura las variables de entorno**:
+    Crea un archivo llamado `.env` en la raíz de la carpeta `backend`. Puedes copiarlo desde el ejemplo:
+    ```bash
+    cp .env.example .env
+    ```
+    Abre el archivo `.env` y añade tu clave de API de Gemini:
+    ```
+    API_KEY=TU_API_KEY_DE_GEMINI_AQUI
+    ```
 
-## 3. Puesta en Marcha y Ejecución Local
+4.  **Inicia el servidor de desarrollo**:
+    ```bash
+    npm run dev
+    ```
+    El servidor se ejecutará en `http://localhost:3001`.
 
-Este proyecto no requiere un proceso de compilación complejo gracias al uso de `importmap` y CDNs. Para ejecutarlo localmente:
+### Paso 2: Ejecutar el Frontend
 
-1.  **Servir los archivos**: Necesitas un servidor web simple para servir los archivos estáticos (`index.html`, `index.tsx`, etc.).
-    -   Si tienes Python instalado, puedes usar: `python -m http.server 8000`
-    -   También puedes usar extensiones de VSCode como **Live Server**.
+1.  **Abre una nueva terminal** en la raíz del proyecto.
 
-2.  **Configurar el Backend**:
-    -   Debes tener tu servidor de backend corriendo.
-    -   El backend debe implementar todos los endpoints especificados en la sección 4.
-    -   **Importante**: Para evitar problemas de CORS, el frontend y el backend deben servirse desde el mismo dominio o el backend debe tener una política de CORS que permita peticiones desde el origen donde se ejecuta el frontend (ej. `http://localhost:8000`).
+2.  **Sirve los archivos estáticos**:
+    El frontend no requiere un proceso de compilación. Solo necesitas un servidor web simple para servir los archivos.
+    -   Si tienes Python instalado: `python -m http.server 8000`
+    -   Usando `npx`: `npx serve .`
+    -   O usa la extensión **Live Server** en VSCode.
+
+3.  **Accede a la aplicación**:
+    Abre tu navegador y ve a `http://localhost:8000` (o el puerto que estés usando). El frontend se conectará automáticamente al backend que corre en el puerto 3001.
+
+---
+
+## 3. Características
+
+(Consulta la documentación específica en los `README.md` de las carpetas `frontend` y `backend` para más detalles).
+
+-   **Dashboard Principal**: Estadísticas y actividad del gremio.
+-   **Gestión de Builds**: Crea, visualiza y obtén guías generadas por IA.
+-   **Mapa Estratégico**: Planificación de rutas y objetivos.
+-   **Métricas y Administración**: Herramientas para oficiales y maestros del gremio (disponibles al iniciar sesión con el usuario `Admin`).
 
 ---
 
 ## 4. Especificación de la API del Backend (Contrato)
 
-El frontend espera que el backend implemente los siguientes endpoints. Todas las rutas están prefijadas con `/api`.
+El frontend espera que el backend implemente los siguientes endpoints. Todas las rutas están prefijadas con `/api`. El backend incluido en este proyecto implementa esta especificación al completo.
 
 ### 4.1. Autenticación (`/api/auth`)
 
@@ -123,5 +134,3 @@ El frontend espera que el backend implemente los siguientes endpoints. Todas las
 ## 5. Modelos de Datos (Types)
 
 Consulta el archivo `types.ts` para ver las definiciones detalladas de las interfaces (`User`, `Build`, `Item`, `GuildMember`, etc.) que se utilizan tanto en el frontend como en los contratos de la API.
-
----

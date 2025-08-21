@@ -11,7 +11,13 @@
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "@google/genai": "^1.14.0"
+    "@google/genai": "^1.14.0",
+    "express": "^5.1.0",
+    "body-parser": "^2.2.0",
+    "uuid": "^11.1.0",
+    "dotenv": "^17.2.1",
+    "cors": "^2.8.5",
+    "cookie-parser": "^1.4.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

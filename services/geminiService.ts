@@ -1,5 +1,7 @@
 import { Build } from '../types';
 
+const API_BASE_URL = 'http://localhost:3001/api';
+
 /**
  * Genera una guía de build llamando a un endpoint del backend.
  * El backend es responsable de llamar de forma segura a la API de Gemini.
@@ -8,7 +10,7 @@ import { Build } from '../types';
  */
 export const generateBuildGuide = async (build: Build): Promise<string> => {
   try {
-    const response = await fetch('/api/ai/generate-build-guide', {
+    const response = await fetch(`${API_BASE_URL}/ai/generate-build-guide`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
