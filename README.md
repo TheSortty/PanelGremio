@@ -11,56 +11,45 @@ El Panel del Gremio es una aplicación web de página única (SPA) diseñada par
 
 ---
 
-## 2. Puesta en Marcha y Ejecución Local
+## 2. Puesta en Marcha y Ejecución Local (con Visual Studio Code)
 
-Para ejecutar el proyecto completo, necesitas correr el backend y el frontend simultáneamente.
+Para ejecutar el proyecto completo, necesitas correr el **backend** (servidor) y el **frontend** (interfaz de usuario) al mismo tiempo. La forma más sencilla es usando **dos terminales integradas** en Visual Studio Code.
 
 ### Requisitos
 
 -   Node.js (v18 o superior)
--   npm (o un gestor de paquetes similar)
--   Una clave de API de Google Gemini
+-   npm (incluido con Node.js)
+-   La extensión **Live Server** para Visual Studio Code (búscala e instálala desde el panel de Extensiones).
 
-### Paso 1: Configurar y Ejecutar el Backend
+### Paso 1: Configurar y Ejecutar el Backend (Servidor)
 
-1.  **Navega a la carpeta del backend**:
+1.  **Abre el proyecto en VS Code**.
+2.  **Abre una nueva terminal integrada**: Puedes hacerlo desde el menú `Terminal > Nueva terminal`.
+3.  **Navega a la carpeta del backend** en esa terminal:
     ```bash
     cd backend
     ```
-
-2.  **Instala las dependencias**:
+4.  **Clave de API**: Se ha añadido un archivo `.env` con tu clave de API en la carpeta `backend`. Si necesitas cambiarla en el futuro, puedes editar ese archivo.
+5.  **Instala las dependencias del backend**:
     ```bash
     npm install
     ```
-
-3.  **Configura las variables de entorno**:
-    Crea un archivo llamado `.env` en la raíz de la carpeta `backend`. Puedes copiarlo desde el ejemplo:
-    ```bash
-    cp .env.example .env
-    ```
-    Abre el archivo `.env` y añade tu clave de API de Gemini:
-    ```
-    API_KEY=TU_API_KEY_DE_GEMINI_AQUI
-    ```
-
-4.  **Inicia el servidor de desarrollo**:
+    Esto leerá el archivo `package.json` y descargará todo lo necesario para que el servidor funcione.
+6.  **Inicia el servidor de desarrollo del backend**:
     ```bash
     npm run dev
     ```
-    El servidor se ejecutará en `http://localhost:3001`.
+    Verás un mensaje como `Backend server is listening on http://localhost:3001`. **¡Importante! Deja esta terminal abierta y corriendo.**
 
-### Paso 2: Ejecutar el Frontend
+### Paso 2: Ejecutar el Frontend (Interfaz de Usuario)
 
-1.  **Abre una nueva terminal** en la raíz del proyecto.
-
-2.  **Sirve los archivos estáticos**:
-    El frontend no requiere un proceso de compilación. Solo necesitas un servidor web simple para servir los archivos.
-    -   Si tienes Python instalado: `python -m http.server 8000`
-    -   Usando `npx`: `npx serve .`
-    -   O usa la extensión **Live Server** en VSCode.
-
-3.  **Accede a la aplicación**:
-    Abre tu navegador y ve a `http://localhost:8000` (o el puerto que estés usando). El frontend se conectará automáticamente al backend que corre en el puerto 3001.
+1.  **Abre una SEGUNDA terminal integrada**: Haz clic en el icono `+` en el panel de la terminal de VS Code para abrir otra terminal al lado de la del backend.
+2.  **Asegúrate de estar en la raíz del proyecto**, no en la carpeta `backend`. Si estás en `backend`, usa `cd ..` para volver a la carpeta principal.
+3.  **Inicia el frontend usando Live Server**:
+    -   En el explorador de archivos de VS Code, busca el archivo `index.html` que está en la raíz del proyecto.
+    -   Haz clic derecho sobre `index.html`.
+    -   Selecciona la opción **"Open with Live Server"**.
+4.  **¡Listo!** Tu navegador web se abrirá automáticamente en una dirección como `http://127.0.0.1:5500` y verás la aplicación funcionando. El frontend se conectará automáticamente al backend que dejaste corriendo en la primera terminal.
 
 ---
 

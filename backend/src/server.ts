@@ -12,11 +12,23 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // Configuración de CORS para permitir peticiones desde el frontend
-// que corre en un origen diferente (ej. http://localhost:8000)
-app.use(cors({
-  origin: 'http://localhost:8000', // Reemplazar con el origen de tu frontend si es diferente
-  credentials: true, // Permitir el envío de cookies
-}));
+// que corre en un origen diferente durante el desarrollo local (ej. http://localhost:5500)
+const allowedOrigins = [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/];
+
+const options: cors.CorsOptions = {
+    origin: (origin, callback) => {
+        // Permitir peticiones sin origen (ej. apps móviles, Postman, curl)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.some(pattern => pattern.test(origin))) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true, // Permitir el envío de cookies
+};
+app.use(cors(options));
 
 
 // Middlewares
