@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Build, Item } from '../../types';
-import { BUILD_CATEGORIES } from '../../constants';
-import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
-import Card from '../shared/Card';
+import { Build, Item } from '../../types.ts';
+import { BUILD_CATEGORIES } from '../../constants.ts';
+import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
+import Card from '../shared/Card.tsx';
 
 interface BuildCreatorProps {
   onSave: (build: Build) => Promise<void>;

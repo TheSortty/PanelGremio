@@ -1,7 +1,7 @@
 // NOTA: Este archivo ha sido reutilizado para centralizar las llamadas a la API del backend.
 // Se recomienda encarecidamente renombrar este archivo a `apiService.ts`.
 
-import { User, AuditLog, GuildMember, Build, Item, MemberActivityLog } from '../types';
+import { User, AuditLog, GuildMember, Build, Item, MemberActivityLog } from '../types.ts';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 

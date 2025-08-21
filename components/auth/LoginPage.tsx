@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { useAuth } from './AuthContext';
-import RegisterModal from './RegisterModal';
-import LoginModal from './LoginModal';
+import { useAuth } from './AuthContext.tsx';
+import RegisterModal from './RegisterModal.tsx';
+import LoginModal from './LoginModal.tsx';
 
 const SteamIcon = () => (
     <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Build, Item, Ability } from '../../types';
-import Card from '../shared/Card';
-import { generateBuildGuide } from '../../services/geminiService';
+import { Build, Item, Ability } from '../../types.ts';
+import Card from '../shared/Card.tsx';
+import { generateBuildGuide } from '../../services/geminiService.ts';
 
 interface BuildViewerProps {
   build: Build;

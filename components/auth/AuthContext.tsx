@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '../../types';
-import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
+import { User } from '../../types.ts';
+import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
 
 interface AuthContextType {
   user: User | null;

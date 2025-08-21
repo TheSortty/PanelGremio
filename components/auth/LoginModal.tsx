@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import Modal from '../shared/Modal';
-import { useAuth } from './AuthContext';
+import Modal from '../shared/Modal.tsx';
+import { useAuth } from './AuthContext.tsx';
 
 interface LoginModalProps {
   isOpen: boolean;

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Build } from '../../types';
-import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
-import BuildCreator from './BuildCreator';
-import BuildViewer from './BuildViewer';
-import Card from '../shared/Card';
+import { Build } from '../../types.ts';
+import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
+import BuildCreator from './BuildCreator.tsx';
+import BuildViewer from './BuildViewer.tsx';
+import Card from '../shared/Card.tsx';
 
 type ViewState = 'list' | 'create' | 'view';
 

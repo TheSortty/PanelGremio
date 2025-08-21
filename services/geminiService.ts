@@ -1,4 +1,4 @@
-import { Build } from '../types';
+import { Build } from '../types.ts';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 

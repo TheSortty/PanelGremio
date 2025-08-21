@@ -131,6 +131,23 @@ El frontend espera que el backend implemente los siguientes endpoints. Todas las
 | :--- | :--- | :--- | :--- | :--- |
 | `POST` | `/generate-build-guide` | `{ "build": Build }` | `{ "guide": "string" }` | Recibe un objeto `Build`, llama a la API de Gemini desde el backend con una clave de API segura y devuelve la guía de texto generada. |
 
-## 5. Modelos de Datos (Types)
+---
+
+## 5. Solución de Problemas (Troubleshooting)
+
+**Error: "Loading module from ... was blocked because of a disallowed MIME type ('text/html')."**
+
+Este error es común cuando se trabaja con React y TypeScript directamente en el navegador sin un empaquetador como Vite o Webpack.
+
+-   **Causa**: El navegador no sabe cómo resolver importaciones como `import App from './App'`. No asume automáticamente que debe buscar un archivo llamado `App.tsx`. Cuando no encuentra el archivo, el "Live Server" a menudo devuelve la página `index.html` como respuesta, lo cual tiene el tipo MIME incorrecto (`text/html` en lugar de `application/javascript`), y el navegador bloquea la carga.
+-   **Solución**: La solución es ser explícito en todas las rutas de importación de archivos locales, **incluyendo siempre la extensión del archivo**. Por ejemplo:
+    -   **Incorrecto**: `import App from './App'`
+    -   **Correcto**: `import App from './App.tsx'`
+
+Este proyecto ya ha sido corregido para seguir esta convención.
+
+---
+
+## 6. Modelos de Datos (Types)
 
 Consulta el archivo `types.ts` para ver las definiciones detalladas de las interfaces (`User`, `Build`, `Item`, `GuildMember`, etc.) que se utilizan tanto en el frontend como en los contratos de la API.

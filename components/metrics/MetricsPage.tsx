@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
-import { MemberActivityLog } from '../../types';
-import Card from '../shared/Card';
-import Modal from '../shared/Modal';
+import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
+import { MemberActivityLog } from '../../types.ts';
+import Card from '../shared/Card.tsx';
+import Modal from '../shared/Modal.tsx';
 
 interface ChartData {
   label: string;
