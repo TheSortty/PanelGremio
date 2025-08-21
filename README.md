@@ -21,6 +21,17 @@ Para ejecutar el proyecto completo, necesitas correr el **backend** (servidor) y
 -   npm (incluido con Node.js)
 -   La extensión **Live Server** para Visual Studio Code (búscala e instálala desde el panel de Extensiones).
 
+### Paso 0: Instalar Dependencias del Editor (Solo la primera vez)
+
+Para que Visual Studio Code reconozca correctamente los tipos de React y TypeScript y te ofrezca una buena experiencia de desarrollo sin errores falsos, necesitas instalar unas dependencias de desarrollo.
+
+1.  **Abre una terminal en la carpeta RAÍZ del proyecto** (la que contiene `index.html` y `backend`).
+2.  **Ejecuta el siguiente comando una sola vez**:
+    ```bash
+    npm install
+    ```
+    Esto leerá el archivo `package.json` y preparará tu entorno de desarrollo.
+
 ### Paso 1: Configurar y Ejecutar el Backend (Servidor)
 
 1.  **Abre el proyecto en VS Code**.
