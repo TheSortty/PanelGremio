@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  role      String   @default("Invitado")
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  lastSeen DateTime @default(now()) @updatedAt
+  online   Boolean  @default(false)
+  builds       Build[]
+  auditLogs    AuditLog[]
+  activityLogs ActivityLog[]
+}
+
+
+model Build {
+  id          String @id @default(uuid())
+  title       String
+  category    String
+  description String
+  authorId    String
+  author      User   @relation(fields: [authorId], references: [id])
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  actorId     String
+  actorName   String
+  actor       User      @relation(fields: [actorId], references: [id])
+  action      String
+  targetId    String?
+  targetType  String?
+  timestamp   DateTime  @default(now())
+  details     Json?
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  timestamp DateTime @default(now())
+}
+
+model Item {
+  id      String @id @unique
+  name    String
+  type    String // weapon, helmet, etc.
+  iconUrl String
+}
