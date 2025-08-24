@@ -28,9 +28,14 @@ model Build {
   id          String @id @default(uuid())
   title       String
   category    String
-  description String
+  description String? // Hacemos la descripción opcional
   authorId    String
   author      User   @relation(fields: [authorId], references: [id])
+
+  // Campos añadidos para guardar los ítems de la build
+  equipment   Json?
+  consumables Json?
+  abilities Json?
 }
 
 model AuditLog {

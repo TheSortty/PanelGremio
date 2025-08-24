@@ -1,6 +1,6 @@
 
 import React, { useState, MouseEvent } from 'react';
-import Card from '../shared/Card.tsx';
+import Card from '../shared/Card';
 
 interface Marker {
   id: number;

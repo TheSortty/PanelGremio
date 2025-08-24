@@ -1,6 +1,6 @@
 import React from 'react';
-import { GuildMember } from '../../types.ts';
-import Card from '../shared/Card.tsx';
+import { GuildMember } from '../../types';
+import Card from '../shared/Card';
 
 interface ActivityTableProps {
   members: GuildMember[];

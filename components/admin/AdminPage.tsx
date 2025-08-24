@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, GuildMember } from '../../types.ts';
-import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
-import Card from '../shared/Card.tsx';
-import { useAuth } from '../auth/AuthContext.tsx';
+import { User, GuildMember } from '../../types';
+import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
+import Card from '../shared/Card';
+import { useAuth } from '../auth/AuthContext';
 
 const ROLES: GuildMember['role'][] = ['Maestro del Gremio', 'Mano Derecha', 'Oficial', 'Miembro', 'Iniciado', 'Invitado'];
 

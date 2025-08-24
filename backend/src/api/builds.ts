@@ -25,16 +25,13 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Create a new build
-// Protegemos esta ruta con el middleware. Solo usuarios logueados pueden acceder.
-router.post('/', authMiddleware, async (req: any, res) => {
-    // Extraemos los datos de la build del cuerpo de la petición.
-    const { title, category, description } = req.body;
-    
-    // El autor es el usuario que hemos verificado con el middleware.
-    const authorId = req.user.id; 
 
-    // Validación básica
+// Create a new build
+router.post('/', authMiddleware, async (req: any, res) => {
+    // Ahora también extraemos equipment y consumables del cuerpo de la petición
+    const { title, category, description, equipment, consumables, abilities } = req.body;
+    const authorId = req.user.id;
+
     if (!title || !category || !authorId) {
         return res.status(400).json({ message: "Title, category, and author are required." });
     }
@@ -45,8 +42,11 @@ router.post('/', authMiddleware, async (req: any, res) => {
                 title,
                 category,
                 description,
+                equipment,
+                consumables,
+                abilities, // <-- Y lo guardamos en la base de datos
                 author: {
-                    connect: { id: authorId }, // Aquí conectamos la build con el usuario autor.
+                    connect: { id: authorId },
                 },
             },
         });

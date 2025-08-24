@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
-import { GuildMember } from '../../types.ts';
-import ActivityTable from './ActivityTable.tsx';
-import StatCard from './StatCard.tsx';
-import Card from '../shared/Card.tsx';
+import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
+import { GuildMember } from '../../types';
+import ActivityTable from './ActivityTable';
+import StatCard from './StatCard';
+import Card from '../shared/Card';
 
 const UsersIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

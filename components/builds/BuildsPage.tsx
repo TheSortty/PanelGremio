@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Build } from '../../types.ts';
-import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
-import BuildCreator from './BuildCreator.tsx';
-import BuildViewer from './BuildViewer.tsx';
-import Card from '../shared/Card.tsx';
+import { Build } from '../../types';
+import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
+import BuildCreator from './BuildCreator';
+import BuildViewer from './BuildViewer';
+import Card from '../shared/Card';
 
 type ViewState = 'list' | 'create' | 'view';
 
@@ -92,7 +92,7 @@ const BuildsPage: React.FC = () => {
                              <img key={index} src={item.iconUrl} alt={item.name} className="w-10 h-10 rounded-md bg-gray-700"/>
                         ))}
                     </div>
-                    <p className="text-xs text-right mt-3 text-gray-500">por {build.author}</p>
+                    <p className="text-xs text-right mt-3 text-gray-500">por {build.author?.name}</p>
                 </Card>
               ))}
             </div>

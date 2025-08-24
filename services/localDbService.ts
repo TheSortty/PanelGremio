@@ -1,12 +1,25 @@
-// NOTA: Este archivo ha sido reutilizado para centralizar las llamadas a la API del backend.
-// Se recomienda encarecidamente renombrar este archivo a `apiService.ts`.
+// services/localDbService.ts
 
-import { User, AuditLog, GuildMember, Build, Item, MemberActivityLog } from '../types.ts';
+import { User, AuditLog, GuildMember, Build, Item, MemberActivityLog } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
-// Helper para manejar las respuestas de fetch
-async function handleResponse<T>(response: Response): Promise<T> {
+// --- Wrapper de Fetch con Credenciales ---
+// Esta función centraliza todas las llamadas a la API y se asegura
+// de que las cookies de sesión siempre se envíen.
+async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
+    // Añadimos 'credentials: include' a todas las peticiones por defecto.
+    const defaultOptions: RequestInit = {
+        ...options,
+        credentials: 'include', // ¡LA LÍNEA MÁGICA!
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+    };
+
+    const response = await fetch(url, defaultOptions);
+
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || 'Error en la petición a la API');
@@ -14,53 +27,49 @@ async function handleResponse<T>(response: Response): Promise<T> {
     return response.json();
 }
 
-// --- Autenticación ---
 
-export const checkSession = (): Promise<User> => fetch(`${API_BASE_URL}/auth/session`).then(res => handleResponse<User>(res));
-export const login = (username: string): Promise<User> => fetch(`${API_BASE_URL}/auth/login`, {
+// --- Autenticación ---
+export const checkSession = (): Promise<User> => apiFetch<User>(`${API_BASE_URL}/auth/session`);
+export const login = (username: string): Promise<User> => apiFetch<User>(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username }),
-}).then(res => handleResponse<User>(res));
-export const register = (username: string): Promise<User> => fetch(`${API_BASE_URL}/auth/register`, {
+});
+export const register = (username: string): Promise<User> => apiFetch<User>(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username }),
-}).then(res => handleResponse<User>(res));
-export const logout = (): Promise<{ message: string }> => fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' }).then(res => handleResponse<{ message: string }>(res));
-export const loginAsAdmin = (): Promise<User> => fetch(`${API_BASE_URL}/auth/login-admin-test`, { method: 'POST' }).then(res => handleResponse<User>(res));
+});
+export const logout = (): Promise<{ message: string }> => apiFetch<{ message: string }>(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+export const loginAsAdmin = (): Promise<User> => apiFetch<User>(`${API_BASE_URL}/auth/login-admin-test`, { method: 'POST' });
+
 
 // --- Administración de Usuarios ---
-
-export const getUsers = (): Promise<User[]> => fetch(`${API_BASE_URL}/users`).then(res => handleResponse<User[]>(res));
-export const updateUser = (id: string, updates: Partial<Omit<User, 'id'>>): Promise<User> => fetch(`${API_BASE_URL}/users/${id}`, {
+export const getUsers = (): Promise<User[]> => apiFetch<User[]>(`${API_BASE_URL}/users`);
+export const updateUser = (id: string, updates: Partial<Omit<User, 'id'>>): Promise<User> => apiFetch<User>(`${API_BASE_URL}/users/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
-}).then(res => handleResponse<User>(res));
-export const deleteUser = (id: string): Promise<{ message: string }> => fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' }).then(res => handleResponse<{ message: string }>(res));
+});
+export const deleteUser = (id: string): Promise<{ message: string }> => apiFetch<{ message: string }>(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
+
 
 // --- Builds ---
-
-export const getBuilds = (): Promise<Build[]> => fetch(`${API_BASE_URL}/builds`).then(res => handleResponse<Build[]>(res));
-export const createBuild = (build: Build): Promise<Build> => fetch(`${API_BASE_URL}/builds`, {
+export const getBuilds = (): Promise<Build[]> => apiFetch<Build[]>(`${API_BASE_URL}/builds`);
+export const createBuild = (build: Build): Promise<Build> => apiFetch<Build>(`${API_BASE_URL}/builds`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(build),
-}).then(res => handleResponse<Build>(res));
+});
+
 
 // --- Items ---
-
 export const getItems = (params: { type: Item['type'], search: string }): Promise<Item[]> => {
     const query = new URLSearchParams({ type: params.type, search: params.search }).toString();
-    return fetch(`${API_BASE_URL}/items?${query}`).then(res => handleResponse<Item[]>(res));
+    return apiFetch<Item[]>(`${API_BASE_URL}/items?${query}`);
 };
 
-// --- Gremio ---
 
-export const getGuildMembers = (): Promise<GuildMember[]> => fetch(`${API_BASE_URL}/guild/members`).then(res => handleResponse<GuildMember[]>(res));
-export const getActivityLogs = (): Promise<MemberActivityLog[]> => fetch(`${API_BASE_URL}/guild/activity`).then(res => handleResponse<MemberActivityLog[]>(res));
+// --- Gremio ---
+export const getGuildMembers = (): Promise<GuildMember[]> => apiFetch<GuildMember[]>(`${API_BASE_URL}/guild/members`);
+export const getActivityLogs = (): Promise<MemberActivityLog[]> => apiFetch<MemberActivityLog[]>(`${API_BASE_URL}/guild/activity`);
+
 
 // --- Auditoría ---
-
-export const getAuditLogs = (): Promise<AuditLog[]> => fetch(`${API_BASE_URL}/admin/logs`).then(res => handleResponse<AuditLog[]>(res));
+export const getAuditLogs = (): Promise<AuditLog[]> => apiFetch<AuditLog[]>(`${API_BASE_URL}/admin/logs`);

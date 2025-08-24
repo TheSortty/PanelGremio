@@ -25,7 +25,7 @@ export interface Build {
   title: string;
   category: string;
   description: string;
-  author: string;
+  author: { name: string } | null;
   equipment: {
       weapon: Item | null;
       offhand: Item | null;

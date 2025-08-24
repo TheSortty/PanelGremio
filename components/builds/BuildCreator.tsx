@@ -1,33 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Build, Item } from '../../types.ts';
-import { BUILD_CATEGORIES } from '../../constants.ts';
-import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
-import Card from '../shared/Card.tsx';
+import { useAuth } from '../auth/AuthContext';
+import { Build, Item } from '../../types';
+import { BUILD_CATEGORIES } from '../../constants';
+import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
+import Card from '../shared/Card';
 
 interface BuildCreatorProps {
-  onSave: (build: Build) => Promise<void>;
-  onCancel: () => void;
+    onSave: (build: Build) => Promise<void>;
+    onCancel: () => void;
 }
 
 const initialBuildState: Build = {
-  id: '', // Will be assigned by the backend
-  title: '',
-  category: BUILD_CATEGORIES[0],
-  description: '',
-  author: '',
-  equipment: {
-    weapon: null,
-    offhand: null,
-    helmet: null,
-    chest: null,
-    boots: null,
-    cape: null,
-  },
-  consumables: {
-    potion: null,
-    food: null,
-  },
-  abilities: {},
+    id: '', // Will be assigned by the backend
+    title: '',
+    category: BUILD_CATEGORIES[0],
+    description: '',
+    author: null,
+    equipment: {
+        weapon: null,
+        offhand: null,
+        helmet: null,
+        chest: null,
+        boots: null,
+        cape: null,
+    },
+    consumables: {
+        potion: null,
+        food: null,
+    },
+    abilities: {},
 };
 
 
@@ -41,7 +42,7 @@ const ItemSelector: React.FC<{
     const [searchTerm, setSearchTerm] = useState('');
     const [items, setItems] = useState<Item[]>([]);
     const [loading, setLoading] = useState(false);
-    
+
     useEffect(() => {
         const fetchItems = async () => {
             if (!isOpen) return;
@@ -69,7 +70,7 @@ const ItemSelector: React.FC<{
                 className="w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             >
                 {selectedItem ? (
-                     <span className="flex items-center">
+                    <span className="flex items-center">
                         <img src={selectedItem.iconUrl} alt="" className="h-6 w-6 flex-shrink-0 rounded-sm" />
                         <span className="ml-3 block truncate">{selectedItem.name}</span>
                     </span>
@@ -93,11 +94,11 @@ const ItemSelector: React.FC<{
                     />
                     <ul className="max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                         {loading ? (
-                             <li className="text-gray-400 text-center py-2">Cargando...</li>
+                            <li className="text-gray-400 text-center py-2">Cargando...</li>
                         ) : items.map(item => (
                             <li key={item.id} onClick={() => { onSelect(item); setIsOpen(false); }}
                                 className="text-gray-200 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600">
-                                 <span className="flex items-center">
+                                <span className="flex items-center">
                                     <img src={item.iconUrl} alt="" className="h-6 w-6 flex-shrink-0 rounded-sm" />
                                     <span className="ml-3 block truncate font-normal">{item.name}</span>
                                 </span>
@@ -122,98 +123,101 @@ const translateSlot = (slot: keyof typeof slotTranslations) => slotTranslations[
 
 
 const BuildCreator: React.FC<BuildCreatorProps> = ({ onSave, onCancel }) => {
-  const [build, setBuild] = useState<Build>(initialBuildState);
-  const [isSaving, setIsSaving] = useState(false);
+    const { user } = useAuth();
+    const [build, setBuild] = useState<Build>(initialBuildState);
+    const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setBuild({ ...build, [e.target.name]: e.target.value });
-  };
-  
-  const handleItemSelect = (slot: keyof Build['equipment'] | keyof Build['consumables'], item: Item | null) => {
-    if ('weapon' in build.equipment && slot in build.equipment) {
-        setBuild(prev => ({ ...prev, equipment: { ...prev.equipment, [slot]: item }}));
-    } else {
-        setBuild(prev => ({ ...prev, consumables: { ...prev.consumables, [slot]: item }}));
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        setBuild({ ...build, [e.target.name]: e.target.value });
+    };
+
+    const handleItemSelect = (slot: keyof Build['equipment'] | keyof Build['consumables'], item: Item | null) => {
+        if ('weapon' in build.equipment && slot in build.equipment) {
+            setBuild(prev => ({ ...prev, equipment: { ...prev.equipment, [slot]: item } }));
+        } else {
+            setBuild(prev => ({ ...prev, consumables: { ...prev.consumables, [slot]: item } }));
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        await onSave(build);
+        setIsSaving(false);
     }
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSaving(true);
-      await onSave(build);
-      setIsSaving(false);
-  }
 
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="space-y-6">
-        <Card>
-            <h3 className="text-lg font-medium leading-6 text-white">Información Básica</h3>
-            <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
-                <div className="sm:col-span-2">
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-300">Título de la Build</label>
-                    <input type="text" name="title" id="title" required value={build.title} onChange={handleInputChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div>
-                     <label htmlFor="category" className="block text-sm font-medium text-gray-300">Categoría</label>
-                     <select id="category" name="category" value={build.category} onChange={handleInputChange} className="mt-1 block w-full pl-3 pr-10 py-2 bg-gray-700 border-gray-600 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        {BUILD_CATEGORIES.map(cat => <option key={cat}>{cat}</option>)}
-                     </select>
-                </div>
-                <div>
-                     <label htmlFor="author" className="block text-sm font-medium text-gray-300">Autor</label>
-                     <input type="text" name="author" id="author" required value={build.author} onChange={handleInputChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div className="sm:col-span-2">
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-300">Descripción</label>
-                    <textarea id="description" name="description" rows={3} value={build.description} onChange={handleInputChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+    return (
+        <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+                <Card>
+                    <h3 className="text-lg font-medium leading-6 text-white">Información Básica</h3>
+                    <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                        <div className="sm:col-span-2">
+                            <label htmlFor="title" className="block text-sm font-medium text-gray-300">Título de la Build</label>
+                            <input type="text" name="title" id="title" required value={build.title} onChange={handleInputChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                        </div>
+                        <div>
+                            <label htmlFor="category" className="block text-sm font-medium text-gray-300">Categoría</label>
+                            <select id="category" name="category" value={build.category} onChange={handleInputChange} className="mt-1 block w-full pl-3 pr-10 py-2 bg-gray-700 border-gray-600 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                {BUILD_CATEGORIES.map(cat => <option key={cat}>{cat}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300">Autor</label>
+                            <p className="mt-1 block w-full bg-gray-800 rounded-md p-2 sm:text-sm text-gray-400">
+                                {user?.name || 'Desconocido'}
+                            </p>
+                        </div>
+                        <div className="sm:col-span-2">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-300">Descripción</label>
+                            <textarea id="description" name="description" rows={3} value={build.description} onChange={handleInputChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card>
+                    <h3 className="text-lg font-medium leading-6 text-white">Equipamiento</h3>
+                    <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                        {(Object.keys(build.equipment) as Array<keyof Build['equipment']>).map(slot => (
+                            <div key={slot}>
+                                <label className="block text-sm font-medium text-gray-300 capitalize">{translateSlot(slot)}</label>
+                                <ItemSelector
+                                    itemType={slot === 'offhand' ? 'offhand' : slot}
+                                    selectedItem={build.equipment[slot]}
+                                    onSelect={(item) => handleItemSelect(slot, item)}
+                                    placeholder={`Seleccionar ${translateSlot(slot)}`}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                <Card>
+                    <h3 className="text-lg font-medium leading-6 text-white">Consumibles</h3>
+                    <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300">Poción</label>
+                            <ItemSelector itemType="potion" selectedItem={build.consumables.potion} onSelect={(item) => handleItemSelect('potion', item)} placeholder="Seleccionar poción" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300">Comida</label>
+                            <ItemSelector itemType="food" selectedItem={build.consumables.food} onSelect={(item) => handleItemSelect('food', item)} placeholder="Seleccionar comida" />
+                        </div>
+                    </div>
+                </Card>
+
+                <div className="flex justify-end space-x-3">
+                    <button type="button" onClick={onCancel} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50 disabled:cursor-wait">
+                        {isSaving ? 'Guardando...' : 'Guardar Build'}
+                    </button>
                 </div>
             </div>
-        </Card>
-
-        <Card>
-            <h3 className="text-lg font-medium leading-6 text-white">Equipamiento</h3>
-            <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
-                {(Object.keys(build.equipment) as Array<keyof Build['equipment']>).map(slot => (
-                     <div key={slot}>
-                         <label className="block text-sm font-medium text-gray-300 capitalize">{translateSlot(slot)}</label>
-                         <ItemSelector 
-                            itemType={slot === 'offhand' ? 'offhand' : slot}
-                            selectedItem={build.equipment[slot]} 
-                            onSelect={(item) => handleItemSelect(slot, item)} 
-                            placeholder={`Seleccionar ${translateSlot(slot)}`}
-                         />
-                     </div>
-                ))}
-            </div>
-        </Card>
-        
-         <Card>
-            <h3 className="text-lg font-medium leading-6 text-white">Consumibles</h3>
-            <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
-               <div>
-                   <label className="block text-sm font-medium text-gray-300">Poción</label>
-                   <ItemSelector itemType="potion" selectedItem={build.consumables.potion} onSelect={(item) => handleItemSelect('potion', item)} placeholder="Seleccionar poción" />
-               </div>
-               <div>
-                   <label className="block text-sm font-medium text-gray-300">Comida</label>
-                   <ItemSelector itemType="food" selectedItem={build.consumables.food} onSelect={(item) => handleItemSelect('food', item)} placeholder="Seleccionar comida" />
-               </div>
-            </div>
-        </Card>
-
-        <div className="flex justify-end space-x-3">
-          <button type="button" onClick={onCancel} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors">
-            Cancelar
-          </button>
-          <button type="submit" disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50 disabled:cursor-wait">
-            {isSaving ? 'Guardando...' : 'Guardar Build'}
-          </button>
-        </div>
-      </div>
-    </form>
-  );
+        </form>
+    );
 };
 
 export default BuildCreator;

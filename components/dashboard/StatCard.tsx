@@ -1,6 +1,6 @@
 
 import React from 'react';
-import Card from '../shared/Card.tsx';
+import Card from '../shared/Card';
 
 interface StatCardProps {
   title: string;

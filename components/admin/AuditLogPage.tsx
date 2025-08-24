@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AuditLog } from '../../types.ts';
-import * as api from '../../services/localDbService.ts'; // Renamed to apiService in spirit
-import Card from '../shared/Card.tsx';
+import { AuditLog } from '../../types';
+import * as api from '../../services/localDbService'; // Renamed to apiService in spirit
+import Card from '../shared/Card';
 
 const AuditLogPage: React.FC = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
