@@ -62,4 +62,11 @@ model Item {
   name    String
   type    String // weapon, helmet, etc.
   iconUrl String
+  spellSlots Json?
+}
+
+model Spell {
+  id      String @id @unique
+  name    String
+  iconUrl String
 }
