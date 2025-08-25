@@ -1,6 +1,6 @@
 // services/localDbService.ts
 
-import { User, AuditLog, GuildMember, Build, Item, MemberActivityLog } from '../types';
+import { User, AuditLog, GuildMember, Build, Item, MemberActivityLog, Spell } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -27,7 +27,9 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
     return response.json();
 }
 
-
+export interface GroupedSpells {
+    [slotType: string]: Spell[];
+}
 // --- Autenticación ---
 export const checkSession = (): Promise<User> => apiFetch<User>(`${API_BASE_URL}/auth/session`);
 export const login = (username: string): Promise<User> => apiFetch<User>(`${API_BASE_URL}/auth/login`, {
@@ -73,3 +75,8 @@ export const getActivityLogs = (): Promise<MemberActivityLog[]> => apiFetch<Memb
 
 // --- Auditoría ---
 export const getAuditLogs = (): Promise<AuditLog[]> => apiFetch<AuditLog[]>(`${API_BASE_URL}/admin/logs`);
+
+// --- Datos del Juego ---
+export const getSpellsForItem = (itemId: string): Promise<GroupedSpells> => {
+    return apiFetch<GroupedSpells>(`${API_BASE_URL}/game/items/${itemId}/spells`);
+};

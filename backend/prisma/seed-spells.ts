@@ -16,7 +16,7 @@ async function processSpells(spellList: any[]) {
         const uniqueName = spell["@uniquename"];
         const uiSprite = spell["@uisprite"];
         if (!uniqueName || !uiSprite) continue;
-        const iconUrl = `https://render.albiononline.com/v1/sprite/${uiSprite}`;
+        const iconUrl = `https://render.albiononline.com/v1/spell/${uiSprite}`;
         await prisma.spell.upsert({
             where: { id: uniqueName },
             update: { name: uniqueName, iconUrl: iconUrl },

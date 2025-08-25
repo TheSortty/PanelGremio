@@ -68,3 +68,13 @@ export interface AuditLog {
   timestamp: string;
   details?: Record<string, any>;
 }
+
+export interface Spell {
+  id: string;
+  name: string;
+  iconUrl: string;
+}
+
+export interface GroupedSpells {
+  [slotType: string]: Spell[];
+}

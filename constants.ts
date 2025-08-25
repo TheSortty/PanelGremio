@@ -1,4 +1,4 @@
-import { Item, Ability } from './types.ts';
+import { Item, Ability } from './types';
 
 // Placeholder function to generate realistic item icons from Albion's CDN
 const getItemIconUrl = (itemName: string) => `https://render.albiononline.com/v1/sprite/${itemName}?quality=4&size=128`;

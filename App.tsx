@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
-import Dashboard from './components/dashboard/Dashboard.tsx';
-import BuildsPage from './components/builds/BuildsPage.tsx';
-import MapPage from './components/map/MapPage.tsx';
-import MetricsPage from './components/metrics/MetricsPage.tsx';
-import { AuthProvider, useAuth } from './components/auth/AuthContext.tsx';
-import LoginPage from './components/auth/LoginPage.tsx';
-import UserMenu from './components/auth/UserMenu.tsx';
-import { GuildMember } from './types.ts';
-import AdminPage from './components/admin/AdminPage.tsx';
-import AuditLogPage from './components/admin/AuditLogPage.tsx';
+import Dashboard from './components/dashboard/Dashboard';
+import BuildsPage from './components/builds/BuildsPage';
+import MapPage from './components/map/MapPage';
+import MetricsPage from './components/metrics/MetricsPage';
+import { AuthProvider, useAuth } from './components/auth/AuthContext';
+import LoginPage from './components/auth/LoginPage';
+import UserMenu from './components/auth/UserMenu';
+import { GuildMember } from './types';
+import AdminPage from './components/admin/AdminPage';
+import AuditLogPage from './components/admin/AuditLogPage';
 
 type Page = 'dashboard' | 'builds' | 'map' | 'metrics' | 'admin' | 'logs';
 
