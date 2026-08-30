@@ -35,6 +35,9 @@ export default async function Panel() {
     .from('guild_members')
     .select('*')
     .order('last_seen', { ascending: false })
+    // Límite explícito: PostgREST corta en 1000 filas por defecto y no lo
+    // informa. Mejor decidir el número acá que descubrir el recorte después.
+    .limit(500)
 
   if (error) {
     return (

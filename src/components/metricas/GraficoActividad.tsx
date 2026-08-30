@@ -1,24 +1,69 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
+import { Aviso } from '@/components/ui/Aviso'
 import { Card, CardTitulo } from '@/components/ui/Card'
+import { CargandoPagina } from '@/components/ui/Cargando'
 import { Modal } from '@/components/ui/Modal'
+import { Vacio } from '@/components/ui/Vacio'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils/cn'
 
-type Evento = { fecha: string; miembro: string }
+type Celda = {
+  dia: number
+  hora: number
+  conexiones: number
+  miembros: string[]
+}
 
 type Barra = { etiqueta: string; valor: number; miembros: string[] }
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
-export function GraficoActividad({ eventos }: { eventos: Evento[] }) {
+export function GraficoActividad() {
+  const [celdas, setCeldas] = useState<Celda[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [detalle, setDetalle] = useState<{ titulo: string; miembros: string[] } | null>(
     null,
   )
 
-  const { porDia, porHora } = useMemo(() => {
+  // La zona horaria del navegador se resuelve en el cliente y se manda a la
+  // base, que agrupa directamente en hora local. Antes la interfaz decía "UTC"
+  // en un gráfico mientras el otro usaba getHours(), que es hora local: los dos
+  // rótulos no podían ser ciertos a la vez.
+  const zona = useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    [],
+  )
+
+  useEffect(() => {
+    let cancelado = false
+
+    ;(async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase.rpc('metricas_actividad', { zona })
+
+      if (cancelado) return
+      if (error) setError(error.message)
+      else
+        setCeldas(
+          (data ?? []).map((c) => ({
+            dia: Number(c.dia),
+            hora: Number(c.hora),
+            conexiones: Number(c.conexiones),
+            miembros: c.miembros ?? [],
+          })),
+        )
+    })()
+
+    return () => {
+      cancelado = true
+    }
+  }, [zona])
+
+  const { porDia, porHora, total } = useMemo(() => {
     const dia: Barra[] = DIAS_CORTOS.map((etiqueta) => ({
       etiqueta,
       valor: 0,
@@ -30,32 +75,51 @@ export function GraficoActividad({ eventos }: { eventos: Evento[] }) {
       miembros: [],
     }))
 
-    const miembrosPorDia = DIAS_CORTOS.map(() => new Set<string>())
-    const miembrosPorHora = Array.from({ length: 24 }, () => new Set<string>())
+    const nombresDia = DIAS_CORTOS.map(() => new Set<string>())
+    const nombresHora = Array.from({ length: 24 }, () => new Set<string>())
+    let suma = 0
 
-    for (const evento of eventos) {
-      const d = new Date(evento.fecha)
-      if (Number.isNaN(d.getTime())) continue
+    for (const celda of celdas ?? []) {
+      const d = dia[celda.dia]
+      const h = hora[celda.hora]
+      if (!d || !h) continue
 
-      const indiceDia = d.getDay()
-      const indiceHora = d.getHours()
+      d.valor += celda.conexiones
+      h.valor += celda.conexiones
+      suma += celda.conexiones
 
-      dia[indiceDia]!.valor++
-      miembrosPorDia[indiceDia]!.add(evento.miembro)
-
-      hora[indiceHora]!.valor++
-      miembrosPorHora[indiceHora]!.add(evento.miembro)
+      for (const nombre of celda.miembros) {
+        nombresDia[celda.dia]!.add(nombre)
+        nombresHora[celda.hora]!.add(nombre)
+      }
     }
 
     dia.forEach((b, i) => {
-      b.miembros = [...miembrosPorDia[i]!].sort()
+      b.miembros = [...nombresDia[i]!].sort()
     })
     hora.forEach((b, i) => {
-      b.miembros = [...miembrosPorHora[i]!].sort()
+      b.miembros = [...nombresHora[i]!].sort()
     })
 
-    return { porDia: dia, porHora: hora }
-  }, [eventos])
+    return { porDia: dia, porHora: hora, total: suma }
+  }, [celdas])
+
+  if (error) {
+    return <Aviso tono="error">No pudimos cargar las métricas: {error}</Aviso>
+  }
+
+  if (celdas === null) {
+    return <CargandoPagina mensaje="Calculando actividad…" />
+  }
+
+  if (total === 0) {
+    return (
+      <Vacio
+        titulo="Todavía no hay datos de actividad"
+        descripcion="Se registra una conexión por miembro y por hora. Los gráficos se llenan a medida que la gente entra al panel."
+      />
+    )
+  }
 
   const maxDia = Math.max(...porDia.map((d) => d.valor), 1)
   const maxHora = Math.max(...porHora.map((h) => h.valor), 1)
@@ -83,8 +147,8 @@ export function GraficoActividad({ eventos }: { eventos: Evento[] }) {
                 </span>
                 <div
                   className="w-full rounded-t bg-acento transition-colors group-hover:bg-acento-fuerte"
-                  // min-height para que un día con 0 conexiones siga siendo
-                  // una zona clicable y no una barra invisible.
+                  // min-height para que un día sin conexiones siga siendo
+                  // clicable y no una barra invisible.
                   style={{
                     height: `${Math.max((barra.valor / maxDia) * 100, 2)}%`,
                   }}
@@ -99,13 +163,12 @@ export function GraficoActividad({ eventos }: { eventos: Evento[] }) {
           <CardTitulo>Actividad por hora del día</CardTitulo>
           <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-12">
             {porHora.map((barra) => {
-              // Intensidad en cinco pasos: el original armaba clases de Tailwind
-              // concatenando strings (`bg-teal-500/${n}`), que el compilador no
-              // puede detectar, así que esos colores nunca se generaban.
+              // Intensidad en cinco pasos con clases completas. El original
+              // las concatenaba (`bg-teal-500/${n}`), y Tailwind no puede
+              // detectar clases armadas en tiempo de ejecución: esos colores
+              // nunca llegaban al CSS.
               const intensidad =
-                barra.valor === 0
-                  ? 0
-                  : Math.ceil((barra.valor / maxHora) * 4)
+                barra.valor === 0 ? 0 : Math.ceil((barra.valor / maxHora) * 4)
 
               return (
                 <button
@@ -134,7 +197,7 @@ export function GraficoActividad({ eventos }: { eventos: Evento[] }) {
             })}
           </div>
           <p className="mt-3 text-xs text-texto-tenue">
-            Horas en tu zona horaria local.
+            Horas en tu zona horaria ({zona}).
           </p>
         </Card>
       </div>

@@ -1,15 +1,3 @@
-/**
- * Tipos de la base de datos.
- *
- * Escritos a mano para espejar supabase/migrations/. En cuanto tengas el
- * proyecto linkeado, regeneralos desde la base real para que no haya deriva:
- *
- *     npm run db:types
- *
- * Ese comando sobrescribe este archivo con la salida de
- * `supabase gen types typescript --linked`.
- */
-
 export type Json =
   | string
   | number
@@ -19,273 +7,403 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      profiles: {
+      activity_logs: {
         Row: {
-          id: string
-          name: string
-          avatar_url: string | null
-          role: Database['public']['Enums']['guild_role']
-          status: Database['public']['Enums']['user_status']
-          steam_id: string | null
-          created_at: string
-          last_seen: string
+          id: number
+          occurred_at: string
+          profile_id: string
         }
         Insert: {
-          id: string
-          name: string
-          avatar_url?: string | null
-          role?: Database['public']['Enums']['guild_role']
-          status?: Database['public']['Enums']['user_status']
-          steam_id?: string | null
-          created_at?: string
-          last_seen?: string
+          id?: never
+          occurred_at?: string
+          profile_id: string
         }
         Update: {
-          name?: string
-          avatar_url?: string | null
+          id?: never
+          occurred_at?: string
+          profile_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_id_fkey'
-            columns: ['id']
-            isOneToOne: true
-            referencedRelation: 'users'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      builds: {
-        Row: {
-          id: string
-          title: string
-          category: string
-          description: string | null
-          author_id: string
-          equipment: Json
-          consumables: Json
-          abilities: Json
-          ai_guide: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          category: string
-          description?: string | null
-          author_id: string
-          equipment?: Json
-          consumables?: Json
-          abilities?: Json
-          ai_guide?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          title?: string
-          category?: string
-          description?: string | null
-          equipment?: Json
-          consumables?: Json
-          abilities?: Json
-          ai_guide?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'builds_author_id_fkey'
-            columns: ['author_id']
+            foreignKeyName: "activity_logs_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
       audit_logs: {
         Row: {
-          id: number
+          action: string
           actor_id: string | null
           actor_name: string
-          action: string
+          created_at: string
+          details: Json
+          id: number
           target_id: string | null
           target_type: string | null
-          details: Json
-          created_at: string
         }
         Insert: {
+          action: string
           actor_id?: string | null
           actor_name: string
-          action: string
+          created_at?: string
+          details?: Json
+          id?: never
           target_id?: string | null
           target_type?: string | null
-          details?: Json
-          created_at?: string
         }
-        Update: never
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          details?: Json
+          id?: never
+          target_id?: string | null
+          target_type?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: 'audit_logs_actor_id_fkey'
-            columns: ['actor_id']
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
-      activity_logs: {
+      builds: {
         Row: {
-          id: number
-          profile_id: string
-          occurred_at: string
+          abilities: Json
+          ai_guide: string | null
+          author_id: string
+          category: string
+          consumables: Json
+          created_at: string
+          description: string | null
+          equipment: Json
+          id: string
+          title: string
+          updated_at: string
         }
         Insert: {
-          profile_id: string
-          occurred_at?: string
+          abilities?: Json
+          ai_guide?: string | null
+          author_id: string
+          category: string
+          consumables?: Json
+          created_at?: string
+          description?: string | null
+          equipment?: Json
+          id?: string
+          title: string
+          updated_at?: string
         }
-        Update: never
+        Update: {
+          abilities?: Json
+          ai_guide?: string | null
+          author_id?: string
+          category?: string
+          consumables?: Json
+          created_at?: string
+          description?: string | null
+          equipment?: Json
+          id?: string
+          title?: string
+          updated_at?: string
+        }
         Relationships: [
           {
-            foreignKeyName: 'activity_logs_profile_id_fkey'
-            columns: ['profile_id']
+            foreignKeyName: "builds_author_id_fkey"
+            columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "builds_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_spells: {
+        Row: {
+          item_id: string
+          position: number
+          slot: Database["public"]["Enums"]["spell_slot"]
+          spell_id: string
+        }
+        Insert: {
+          item_id: string
+          position: number
+          slot: Database["public"]["Enums"]["spell_slot"]
+          spell_id: string
+        }
+        Update: {
+          item_id?: string
+          position?: number
+          slot?: Database["public"]["Enums"]["spell_slot"]
+          spell_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_spells_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_spells_spell_id_fkey"
+            columns: ["spell_id"]
+            isOneToOne: false
+            referencedRelation: "spells"
+            referencedColumns: ["id"]
           },
         ]
       }
       items: {
         Row: {
+          icon_url: string
           id: string
           name: string
-          type: Database['public']['Enums']['item_type']
-          icon_url: string
+          type: Database["public"]["Enums"]["item_type"]
         }
         Insert: {
+          icon_url: string
           id: string
           name: string
-          type: Database['public']['Enums']['item_type']
-          icon_url: string
+          type: Database["public"]["Enums"]["item_type"]
         }
         Update: {
-          name?: string
-          type?: Database['public']['Enums']['item_type']
           icon_url?: string
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["item_type"]
+        }
+        Relationships: []
+      }
+      map_markers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string | null
+          type: Database["public"]["Enums"]["marker_type"]
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          type: Database["public"]["Enums"]["marker_type"]
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          type?: Database["public"]["Enums"]["marker_type"]
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_markers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_markers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          last_seen: string
+          name: string
+          role: Database["public"]["Enums"]["guild_role"]
+          status: Database["public"]["Enums"]["user_status"]
+          steam_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          last_seen?: string
+          name: string
+          role?: Database["public"]["Enums"]["guild_role"]
+          status?: Database["public"]["Enums"]["user_status"]
+          steam_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          last_seen?: string
+          name?: string
+          role?: Database["public"]["Enums"]["guild_role"]
+          status?: Database["public"]["Enums"]["user_status"]
+          steam_id?: string | null
         }
         Relationships: []
       }
       spells: {
         Row: {
+          icon_url: string
           id: string
           name: string
-          icon_url: string
         }
         Insert: {
+          icon_url: string
           id: string
           name: string
-          icon_url: string
         }
         Update: {
-          name?: string
           icon_url?: string
+          id?: string
+          name?: string
         }
         Relationships: []
-      }
-      item_spells: {
-        Row: {
-          item_id: string
-          spell_id: string
-          slot: Database['public']['Enums']['spell_slot']
-          position: number
-        }
-        Insert: {
-          item_id: string
-          spell_id: string
-          slot: Database['public']['Enums']['spell_slot']
-          position: number
-        }
-        Update: never
-        Relationships: [
-          {
-            foreignKeyName: 'item_spells_item_id_fkey'
-            columns: ['item_id']
-            isOneToOne: false
-            referencedRelation: 'items'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'item_spells_spell_id_fkey'
-            columns: ['spell_id']
-            isOneToOne: false
-            referencedRelation: 'spells'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      map_markers: {
-        Row: {
-          id: string
-          x: number
-          y: number
-          type: Database['public']['Enums']['marker_type']
-          label: string | null
-          created_by: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          x: number
-          y: number
-          type: Database['public']['Enums']['marker_type']
-          label?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Update: {
-          label?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'map_markers_created_by_fkey'
-            columns: ['created_by']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
       }
     }
     Views: {
       guild_members: {
         Row: {
-          id: string | null
-          name: string | null
           avatar_url: string | null
-          role: Database['public']['Enums']['guild_role'] | null
+          id: string | null
           last_seen: string | null
+          name: string | null
           online: boolean | null
+          role: Database["public"]["Enums"]["guild_role"] | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          id?: string | null
+          last_seen?: string | null
+          name?: string | null
+          online?: never
+          role?: Database["public"]["Enums"]["guild_role"] | null
+        }
+        Update: {
+          avatar_url?: string | null
+          id?: string | null
+          last_seen?: string | null
+          name?: string | null
+          online?: never
+          role?: Database["public"]["Enums"]["guild_role"] | null
         }
         Relationships: []
       }
     }
     Functions: {
-      registrar_actividad: {
-        Args: Record<string, never>
-        Returns: undefined
+      admin_cambiar_estado: {
+        Args: {
+          nuevo_estado: Database["public"]["Enums"]["user_status"]
+          usuario_id: string
+        }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          last_seen: string
+          name: string
+          role: Database["public"]["Enums"]["guild_role"]
+          status: Database["public"]["Enums"]["user_status"]
+          steam_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_cambiar_rol: {
         Args: {
+          nuevo_rol: Database["public"]["Enums"]["guild_role"]
           usuario_id: string
-          nuevo_rol: Database['public']['Enums']['guild_role']
         }
-        Returns: Database['public']['Tables']['profiles']['Row']
-      }
-      admin_cambiar_estado: {
-        Args: {
-          usuario_id: string
-          nuevo_estado: Database['public']['Enums']['user_status']
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          last_seen: string
+          name: string
+          role: Database["public"]["Enums"]["guild_role"]
+          status: Database["public"]["Enums"]["user_status"]
+          steam_id: string | null
         }
-        Returns: Database['public']['Tables']['profiles']['Row']
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_eliminar_usuario: {
         Args: { usuario_id: string }
@@ -294,52 +412,203 @@ export type Database = {
       hechizos_de_item: {
         Args: { item: string }
         Returns: {
-          slot: Database['public']['Enums']['spell_slot']
+          icon_url: string
           id: string
           name: string
-          icon_url: string
           position: number
+          slot: Database["public"]["Enums"]["spell_slot"]
         }[]
       }
+      metricas_actividad: {
+        Args: { zona?: string }
+        Returns: {
+          conexiones: number
+          dia: number
+          hora: number
+          miembros: string[]
+        }[]
+      }
+      registrar_actividad: { Args: never; Returns: undefined }
     }
     Enums: {
       guild_role:
-        | 'Maestro del Gremio'
-        | 'Mano Derecha'
-        | 'Oficial'
-        | 'Miembro'
-        | 'Iniciado'
-        | 'Invitado'
-      user_status: 'pending' | 'active' | 'rejected'
+        | "Maestro del Gremio"
+        | "Mano Derecha"
+        | "Oficial"
+        | "Miembro"
+        | "Iniciado"
+        | "Invitado"
       item_type:
-        | 'weapon'
-        | 'offhand'
-        | 'helmet'
-        | 'chest'
-        | 'boots'
-        | 'cape'
-        | 'potion'
-        | 'food'
-        | 'mount'
-        | 'bag'
-        | 'tool'
-        | 'other'
-      spell_slot: 'Q' | 'W' | 'E' | 'Passive'
-      marker_type: 'transport' | 'gank' | 'objective'
+        | "weapon"
+        | "offhand"
+        | "helmet"
+        | "chest"
+        | "boots"
+        | "cape"
+        | "potion"
+        | "food"
+        | "mount"
+        | "bag"
+        | "tool"
+        | "other"
+      marker_type: "transport" | "gank" | "objective"
+      spell_slot: "Q" | "W" | "E" | "Passive"
+      user_status: "pending" | "active" | "rejected"
     }
-    CompositeTypes: Record<string, never>
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-// --- Atajos ------------------------------------------------------------------
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type PublicSchema = Database['public']
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export type Tables<T extends keyof PublicSchema['Tables']> =
-  PublicSchema['Tables'][T]['Row']
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-export type TablesInsert<T extends keyof PublicSchema['Tables']> =
-  PublicSchema['Tables'][T]['Insert']
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export type Enums<T extends keyof PublicSchema['Enums']> =
-  PublicSchema['Enums'][T]
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {
+      guild_role: [
+        "Maestro del Gremio",
+        "Mano Derecha",
+        "Oficial",
+        "Miembro",
+        "Iniciado",
+        "Invitado",
+      ],
+      item_type: [
+        "weapon",
+        "offhand",
+        "helmet",
+        "chest",
+        "boots",
+        "cape",
+        "potion",
+        "food",
+        "mount",
+        "bag",
+        "tool",
+        "other",
+      ],
+      marker_type: ["transport", "gank", "objective"],
+      spell_slot: ["Q", "W", "E", "Passive"],
+      user_status: ["pending", "active", "rejected"],
+    },
+  },
+} as const

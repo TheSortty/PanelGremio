@@ -112,17 +112,31 @@ async function main() {
   // Un ítem puede referenciar un hechizo que no está en la tabla `spells`
   // (por ejemplo, uno sin sprite, que seed-spells descarta). Esas filas
   // violarían la FK, así que se filtran acá en vez de hacer fallar todo el lote.
-  const { data: hechizosExistentes, error: errorHechizos } = await supabase
-    .from('spells')
-    .select('id')
+  //
+  // OJO con cómo se consulta esto: PostgREST corta las respuestas en 1000 filas
+  // por defecto (db-max-rows) y NO avisa. Un `.select('id')` pelado sobre una
+  // tabla de 7.600 hechizos devuelve 1000 en silencio, y el filtro de abajo
+  // descarta como inválido todo lo que no entró en esa página.
+  //
+  // Por eso se preguntan solo los ids que hacen falta, en tandas acotadas.
+  const idsReferenciados = [...new Set(itemSpells.map((v) => v.spell_id))]
+  const idsValidos = new Set<string>()
+  const TANDA = 300
 
-  if (errorHechizos) {
-    console.error('\nNo pude leer la tabla de hechizos:', errorHechizos.message)
-    console.error('¿Corriste `npm run seed:spells` primero?')
-    process.exit(1)
+  for (let i = 0; i < idsReferenciados.length; i += TANDA) {
+    const tanda = idsReferenciados.slice(i, i + TANDA)
+    const { data, error } = await supabase
+      .from('spells')
+      .select('id')
+      .in('id', tanda)
+
+    if (error) {
+      console.error('\nNo pude leer la tabla de hechizos:', error.message)
+      console.error('¿Corriste `npm run seed:spells` primero?')
+      process.exit(1)
+    }
+    for (const fila of data) idsValidos.add(fila.id)
   }
-
-  const idsValidos = new Set(hechizosExistentes.map((s) => s.id))
   const vinculosValidos = itemSpells.filter((v) => idsValidos.has(v.spell_id))
   const descartados = itemSpells.length - vinculosValidos.length
 
