@@ -189,9 +189,78 @@ sueltas; el motivo está comentado en ese archivo.
 
 ---
 
-## Despliegue
+## Despliegue en Cloudflare Workers
 
-Pensado para Vercel. Cargá las mismas variables de `.env.example` en el
-proyecto, con `NEXT_PUBLIC_SITE_URL` apuntando al dominio real, y agregá
-`https://tu-dominio/auth/callback` en **Authentication → URL Configuration →
-Redirect URLs** de Supabase.
+El proyecto está configurado para Cloudflare con
+[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare). Bundle medido:
+**1,78 MB gzip**, dentro del límite de 3 MB del plan gratuito.
+
+### Ajustes del proyecto en Cloudflare
+
+| Campo | Valor |
+|---|---|
+| Build command | `npm run cf:build` |
+| Deploy command | `npx wrangler deploy` |
+| Output directory | *(vacío — lo define `wrangler.jsonc`)* |
+
+**El build command NO puede ser `npm run build`.** Ese produce un servidor de
+Node que Workers no ejecuta; hace falta el paso de OpenNext.
+
+### Variables de entorno
+
+Distinguí dos grupos, porque van en lugares distintos:
+
+**Variables de *build*** — Next las incrusta en el JavaScript del navegador en
+tiempo de compilación, así que tienen que estar presentes **durante el build**,
+no solo en runtime:
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+NEXT_PUBLIC_SITE_URL      # el dominio real, no localhost
+```
+
+**Secretos de *runtime*** — solo servidor, se cargan como Secrets:
+
+```
+SUPABASE_SECRET_KEY
+STEAM_API_KEY             # opcional
+GEMINI_API_KEY            # opcional
+```
+
+### Después del primer deploy
+
+En Supabase → **Authentication → URL Configuration**, agregá
+`https://tu-dominio/auth/callback` a los Redirect URLs. Sin eso, el login con
+Discord vuelve a un destino rechazado.
+
+`NEXT_PUBLIC_SITE_URL` también tiene que coincidir con el dominio real: el
+flujo de Steam la usa para armar el `return_to` de OpenID, y si no coincide,
+Steam rechaza la verificación.
+
+### El parche de `scripts/build-cloudflare.mjs`
+
+`opennextjs-cloudflare build` a secas **falla** con Next.js 16:
+
+```
+File server/middleware.js does not exist
+```
+
+Es un bug del adaptador, no de esta aplicación: Next 16 dejó de incluir
+`server/middleware.js` en la salida standalone, pero OpenNext sigue exigiéndolo.
+El adaptador ya arregla ese mismo problema para `instrumentation.js` unas líneas
+más arriba; simplemente no lo aplicaron a middleware.
+
+El script parte el build en dos y copia el archivo en el medio. El propio
+archivo explica cómo comprobar si el bug ya se arregló y cuándo se puede borrar.
+
+### Vista previa local
+
+```bash
+npm run cf:preview   # build de Workers + wrangler dev
+```
+
+En Windows OpenNext avisa que no es del todo compatible. El build funciona,
+pero si aparecen fallos raros, conviene usar WSL. Los builds de Cloudflare
+corren en Linux, así que esto no afecta al despliegue.
+

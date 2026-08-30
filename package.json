@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
+    "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -15,7 +15,12 @@
     "seed:items": "tsx scripts/seed-items.ts",
     "seed:spells": "tsx scripts/seed-spells.ts",
     "seed": "npm run seed:spells && npm run seed:items",
-    "data:download": "tsx scripts/descargar-datos.ts"
+    "data:download": "tsx scripts/descargar-datos.ts",
+    "deploy": "npm run cf:build && wrangler deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "cf:build": "node scripts/build-cloudflare.mjs",
+    "cf:preview": "npm run cf:build && wrangler dev"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",
@@ -30,6 +35,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.4",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.4.0",
     "@types/react": "^19.2.18",
@@ -37,6 +43,7 @@
     "supabase": "^2.116.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "wrangler": "^4.127.1"
   }
 }

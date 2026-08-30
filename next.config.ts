@@ -14,3 +14,13 @@ const nextConfig: NextConfig = {
 }
 
 export default nextConfig
+
+/*
+  Expone los bindings de Cloudflare (getCloudflareContext) durante `next dev`.
+  No afecta al build de producción: en producción los provee el propio Worker.
+*/
+if (process.env.NODE_ENV === 'development') {
+  void import('@opennextjs/cloudflare').then((m) =>
+    m.initOpenNextCloudflareForDev(),
+  )
+}

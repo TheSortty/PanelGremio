@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "panel-gremio",
+  "main": ".open-next/worker.js",
+
+  // Fecha de compatibilidad de workerd. Subirla cambia el comportamiento del
+  // runtime, así que se mueve a propósito, no por inercia.
+  "compatibility_date": "2026-08-30",
+
+  // nodejs_compat: Next necesita APIs de Node (crypto, buffer, streams).
+  // global_fetch_strictly_public: hace que un fetch al propio dominio salga a
+  // internet en vez de resolverse internamente. Lo pide OpenNext.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "observability": { "enabled": true }
+
+  // Deliberadamente NO se incluyen dos cosas que `opennextjs-cloudflare migrate`
+  // genera por defecto:
+  //
+  //   "images": { "binding": "IMAGES" }
+  //     Es para optimizar imágenes con next/image. Esta aplicación no usa
+  //     next/image en ningún lado: los iconos de Albion se piden ya
+  //     redimensionados a la API de render (ver src/lib/domain/albion.ts), así
+  //     que el binding no haría nada.
+  //
+  //   "r2_buckets" + "services" (WORKER_SELF_REFERENCE)
+  //     Son para la caché incremental en R2, que sirve para ISR. Acá las 17
+  //     rutas menos dos son dinámicas por sesión, así que no hay nada que
+  //     cachear, y exigirían crear un bucket antes del primer deploy.
+  //     Si en el futuro se agregan páginas estáticas revalidadas, se activa
+  //     siguiendo https://opennext.js.org/cloudflare/caching
+}

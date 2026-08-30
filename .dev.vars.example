@@ -1,0 +1,6 @@
+# Variables para `wrangler dev` (vista previa local del Worker).
+# Copiar a .dev.vars, que está en .gitignore.
+#
+# Para `npm run dev` (Next normal) no hace falta: ahí se usa .env.local.
+
+NEXTJS_ENV=development
