@@ -3,11 +3,13 @@
 import { useCallback, useState, useTransition } from 'react'
 
 import { crearBuild } from '@/actions/builds'
+import { SelectorEncantamiento } from '@/components/builds/SelectorEncantamiento'
 import { SelectorHechizo } from '@/components/builds/SelectorHechizo'
 import { SelectorItem } from '@/components/builds/SelectorItem'
 import { Aviso } from '@/components/ui/Aviso'
 import { Boton } from '@/components/ui/Boton'
 import { Card, CardTitulo } from '@/components/ui/Card'
+import type { Encantamiento } from '@/lib/domain/albion'
 import {
   CATEGORIAS_BUILD,
   CONSUMIBLES_VACIOS,
@@ -23,6 +25,8 @@ import {
   type SlotEquipo,
   type SpellSlot,
 } from '@/lib/domain/builds'
+import type { DatosItem } from '@/lib/domain/calculo'
+import { poderConEncantamiento } from '@/lib/domain/calculo'
 import { createClient } from '@/lib/supabase/client'
 
 const ORDEN_SLOTS: SpellSlot[] = ['Q', 'W', 'E', 'Passive']
@@ -41,54 +45,60 @@ export function CreadorBuild() {
   const [hechizosDisponibles, setHechizosDisponibles] = useState<
     Partial<Record<SlotEquipo, HechizosPorSlot>>
   >({})
+  // Datos vivos de los ítems elegidos: hacen falta para el encantamiento,
+  // el bloqueo de mano secundaria y el poder promedio.
+  const [datosItems, setDatosItems] = useState<Record<string, DatosItem>>({})
   const [error, setError] = useState<string | null>(null)
   const [guardando, iniciarGuardado] = useTransition()
 
-  /**
-   * Trae las habilidades del ítem elegido.
-   *
-   * Llama a hechizos_de_item(), que lee la tabla item_spells ya resuelta.
-   * El endpoint anterior repartía los hechizos por su posición en un array
-   * (`index < 3` iba a Q, etc.), y encima siempre recibía una lista vacía
-   * porque la columna de origen nunca se llegaba a cargar.
-   */
-  const cargarHechizos = useCallback(
-    async (slot: SlotEquipo, itemId: string | null) => {
-      if (!itemId) {
-        setHechizosDisponibles((prev) => ({ ...prev, [slot]: {} }))
-        return
-      }
+  const cargarItem = useCallback(async (slot: SlotEquipo, itemId: string) => {
+    const supabase = createClient()
 
-      const supabase = createClient()
-      const { data, error } = await supabase.rpc('hechizos_de_item', {
-        item: itemId,
-      })
+    const [{ data: item }, { data: hechizos }] = await Promise.all([
+      supabase
+        .from('items')
+        .select('id, name, tier, item_power, two_handed, enchantments, stats')
+        .eq('id', itemId)
+        .maybeSingle(),
+      // Lee item_spells, ya resuelta al sembrar. El endpoint anterior repartía
+      // los hechizos por su posición en un array.
+      supabase.rpc('hechizos_de_item', { item: itemId }),
+    ])
 
-      if (error || !data) {
-        setHechizosDisponibles((prev) => ({ ...prev, [slot]: {} }))
-        return
-      }
+    if (item) {
+      setDatosItems((prev) => ({
+        ...prev,
+        [item.id]: {
+          id: item.id,
+          name: item.name,
+          tier: item.tier,
+          item_power: item.item_power,
+          two_handed: item.two_handed,
+          enchantments: (item.enchantments ?? {}) as Record<string, number>,
+          stats: (item.stats ?? {}) as Record<string, number>,
+        },
+      }))
+    }
 
-      const agrupados: HechizosPorSlot = {}
-      for (const fila of data) {
-        ;(agrupados[fila.slot] ??= []).push({
-          id: fila.id,
-          name: fila.name,
-          icon_url: fila.icon_url,
-        })
-      }
-
-      setHechizosDisponibles((prev) => ({ ...prev, [slot]: agrupados }))
-    },
-    [],
-  )
+    const agrupados: HechizosPorSlot = {}
+    for (const fila of hechizos ?? []) {
+      ;(agrupados[fila.slot] ??= []).push({ id: fila.id, name: fila.name })
+    }
+    setHechizosDisponibles((prev) => ({ ...prev, [slot]: agrupados }))
+  }, [])
 
   function elegirItem(slot: SlotEquipo, item: RefItem | null) {
-    setEquipo((prev) => ({ ...prev, [slot]: item }))
+    setEquipo((prev) => {
+      const siguiente = { ...prev, [slot]: item }
 
-    // Al cambiar el ítem, sus habilidades ya no aplican. Se limpian usando el
-    // mismo helper de claves que las escribió, así no puede quedar ninguna
-    // huérfana por una diferencia de formato.
+      // Si el arma nueva es a dos manos, la mano secundaria se libera sola en
+      // vez de quedar en un estado que la base y el juego rechazarían.
+      if (slot === 'weapon' && item && datosItems[item.id]?.two_handed) {
+        siguiente.offhand = null
+      }
+      return siguiente
+    })
+
     setHabilidades((prev) => {
       const siguiente = { ...prev }
       for (const spellSlot of ORDEN_SLOTS) {
@@ -97,7 +107,16 @@ export function CreadorBuild() {
       return siguiente
     })
 
-    void cargarHechizos(slot, item?.id ?? null)
+    if (item) void cargarItem(slot, item.id)
+    else setHechizosDisponibles((prev) => ({ ...prev, [slot]: {} }))
+  }
+
+  function cambiarEncantamiento(slot: SlotEquipo, nivel: Encantamiento) {
+    setEquipo((prev) => {
+      const actual = prev[slot]
+      if (!actual) return prev
+      return { ...prev, [slot]: { ...actual, ench: nivel } }
+    })
   }
 
   function elegirHechizo(
@@ -106,7 +125,6 @@ export function CreadorBuild() {
     hechizo: RefHechizo | null,
   ) {
     const clave = claveHabilidad(slot, spellSlot)
-
     setHabilidades((prev) => {
       const siguiente = { ...prev }
       if (hechizo) siguiente[clave] = hechizo
@@ -114,6 +132,23 @@ export function CreadorBuild() {
       return siguiente
     })
   }
+
+  // Resumen en vivo mientras se arma la build.
+  const armaEsDosManos = Boolean(
+    equipo.weapon && datosItems[equipo.weapon.id]?.two_handed,
+  )
+
+  const poderes = SLOTS_EQUIPO.map((slot) => {
+    const ref = equipo[slot]
+    if (!ref) return null
+    const datos = datosItems[ref.id]
+    if (!datos) return null
+    return poderConEncantamiento(datos, (ref.ench ?? 0) as Encantamiento)
+  }).filter((p): p is number => p !== null)
+
+  const poderPromedio = poderes.length
+    ? Math.round(poderes.reduce((a, b) => a + b, 0) / poderes.length)
+    : null
 
   function enviar(e: React.FormEvent) {
     e.preventDefault()
@@ -128,8 +163,6 @@ export function CreadorBuild() {
         consumables: consumibles,
         abilities: habilidades,
       })
-
-      // Cuando sale bien, la acción hace redirect y esto no se ejecuta.
       if (resultado && !resultado.ok) setError(resultado.error)
     })
   }
@@ -172,11 +205,22 @@ export function CreadorBuild() {
             </select>
           </div>
 
+          <div className="flex items-end">
+            <div className="w-full rounded-lg border border-borde-suave bg-fondo px-3 py-2">
+              <p className="text-xs text-texto-tenue">Poder de ítem promedio</p>
+              <p className="text-lg font-bold tabular-nums">
+                {poderPromedio ?? '—'}
+                {poderes.length > 0 && (
+                  <span className="ml-1.5 text-xs font-normal text-texto-tenue">
+                    sobre {poderes.length} de {SLOTS_EQUIPO.length} piezas
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+
           <div className="sm:col-span-2">
-            <label
-              htmlFor="descripcion"
-              className="mb-1 block text-xs text-texto-suave"
-            >
+            <label htmlFor="descripcion" className="mb-1 block text-xs text-texto-suave">
               Descripción
             </label>
             <textarea
@@ -194,22 +238,46 @@ export function CreadorBuild() {
 
       <Card>
         <CardTitulo>Equipamiento y habilidades</CardTitulo>
+
+        {armaEsDosManos && (
+          <Aviso tono="info" className="mb-4">
+            {equipo.weapon?.name} es un arma a dos manos: la mano secundaria
+            queda ocupada.
+          </Aviso>
+        )}
+
         <div className="grid gap-5 sm:grid-cols-2">
           {SLOTS_EQUIPO.map((slot) => {
             const disponibles = hechizosDisponibles[slot] ?? {}
+            const ref = equipo[slot]
+            const datos = ref ? datosItems[ref.id] : undefined
+            const bloqueado = slot === 'offhand' && armaEsDosManos
 
             return (
               <div key={slot}>
                 <p className="mb-1 text-xs font-medium text-texto-suave">
                   {NOMBRES_SLOT[slot]}
+                  {datos?.tier != null && (
+                    <span className="ml-1.5 text-texto-tenue">T{datos.tier}</span>
+                  )}
                 </p>
 
                 <SelectorItem
                   tipo={slot}
-                  seleccionado={equipo[slot]}
+                  seleccionado={ref}
                   onSeleccionar={(item) => elegirItem(slot, item)}
                   etiqueta={NOMBRES_SLOT[slot]}
+                  deshabilitado={bloqueado}
+                  motivoDeshabilitado="Ocupada por el arma a dos manos"
                 />
+
+                {ref && datos && (
+                  <SelectorEncantamiento
+                    valor={(ref.ench ?? 0) as Encantamiento}
+                    disponibles={datos.enchantments}
+                    onCambiar={(nivel) => cambiarEncantamiento(slot, nivel)}
+                  />
+                )}
 
                 {ORDEN_SLOTS.map((spellSlot) => (
                   <SelectorHechizo
@@ -217,9 +285,7 @@ export function CreadorBuild() {
                     slot={slot}
                     spellSlot={spellSlot}
                     hechizos={disponibles[spellSlot] ?? []}
-                    seleccionado={
-                      habilidades[claveHabilidad(slot, spellSlot)] ?? null
-                    }
+                    seleccionado={habilidades[claveHabilidad(slot, spellSlot)] ?? null}
                     onSeleccionar={(h) => elegirHechizo(slot, spellSlot, h)}
                   />
                 ))}

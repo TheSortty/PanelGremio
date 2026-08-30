@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { obtenerBuild } from '@/lib/data/builds'
+import { obtenerDatosDeItems } from '@/lib/data/items'
 import {
   NOMBRES_SLOT,
   SLOTS_EQUIPO,
@@ -12,6 +13,8 @@ import {
   type Build,
   type SpellSlot,
 } from '@/lib/domain/builds'
+import { poderConEncantamiento, type DatosItem } from '@/lib/domain/calculo'
+import type { Encantamiento } from '@/lib/domain/albion'
 import { createClient } from '@/lib/supabase/server'
 
 const MODELO = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
@@ -26,7 +29,7 @@ export async function iaDisponible(): Promise<boolean> {
   return Boolean(process.env.GEMINI_API_KEY?.trim())
 }
 
-function describirBuild(build: Build): string {
+function describirBuild(build: Build, datos: Map<string, DatosItem>): string {
   const lineas: string[] = [
     `Título: ${build.title}`,
     `Categoría: ${build.category}`,
@@ -46,8 +49,21 @@ function describirBuild(build: Build): string {
       (s) => build.abilities[claveHabilidad(slot, s)]?.name,
     ).filter(Boolean)
 
+    // Se le pasa tier, encantamiento y poder para que la guía pueda hablar del
+    // nivel real de la build en vez de generalidades sobre el arma.
+    const d = datos.get(item.id)
+    const ench = (item.ench ?? 0) as Encantamiento
+    const poder = d ? poderConEncantamiento(d, ench) : null
+
+    const detalles = [
+      d?.tier != null ? `T${d.tier}` : null,
+      ench > 0 ? `encantamiento ${ench}` : null,
+      poder != null ? `${poder} de poder` : null,
+    ].filter(Boolean)
+
     lineas.push(
       `- ${NOMBRES_SLOT[slot]}: ${item.name}` +
+        (detalles.length ? ` [${detalles.join(', ')}]` : '') +
         (habilidades.length ? ` (habilidades: ${habilidades.join(', ')})` : ''),
     )
   }
@@ -83,9 +99,16 @@ export async function generarGuia(buildId: string): Promise<ResultadoGuia> {
   const build = await obtenerBuild(buildId)
   if (!build) return { ok: false, error: 'No encontramos esa build.' }
 
+  const idsItems = [
+    ...SLOTS_EQUIPO.map((s) => build.equipment[s]?.id),
+    build.consumables.potion?.id,
+    build.consumables.food?.id,
+  ].filter((x): x is string => Boolean(x))
+  const datosItems = await obtenerDatosDeItems(idsItems)
+
   const prompt = `Sos un jugador experto de Albion Online. Escribí una guía breve y práctica para esta build, en español rioplatense y en formato markdown.
 
-${describirBuild(build)}
+${describirBuild(build, datosItems)}
 
 La guía tiene que cubrir, con un encabezado por sección:
 1. Estrategia general: cómo se juega en ${build.category}.

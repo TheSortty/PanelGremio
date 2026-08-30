@@ -1,6 +1,8 @@
 import Link from 'next/link'
 
+import { IconoItem } from '@/components/builds/Icono'
 import { Etiqueta } from '@/components/ui/Etiqueta'
+import type { Encantamiento } from '@/lib/domain/albion'
 import { SLOTS_EQUIPO, type Build } from '@/lib/domain/builds'
 
 export function TarjetaBuild({ build }: { build: Build }) {
@@ -20,15 +22,21 @@ export function TarjetaBuild({ build }: { build: Build }) {
 
       <div className="mt-3 flex min-h-9 flex-wrap gap-1.5">
         {piezas.map((item) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={item.id}
-            src={item.icon_url}
-            alt={item.name}
-            title={item.name}
-            className="size-9 rounded border border-borde bg-fondo"
-            loading="lazy"
-          />
+          <div key={item.id} className="relative">
+            {/* Tamaño mini: son miniaturas de 36 px. */}
+            <IconoItem
+              id={item.id}
+              nombre={item.name}
+              encantamiento={(item.ench ?? 0) as Encantamiento}
+              tamano="mini"
+              className="size-9 rounded border border-borde bg-fondo"
+            />
+            {(item.ench ?? 0) > 0 && (
+              <span className="absolute -right-1 -top-1 rounded bg-acento px-1 text-[9px] font-bold leading-tight text-white">
+                {item.ench}
+              </span>
+            )}
+          </div>
         ))}
       </div>
 

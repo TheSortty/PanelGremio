@@ -1,5 +1,6 @@
 'use client'
 
+import { IconoHechizo } from '@/components/builds/Icono'
 import { cn } from '@/lib/utils/cn'
 import {
   ETIQUETAS_SPELL_SLOT,
@@ -60,12 +61,10 @@ export function SelectorHechizo({
                   : 'border-borde opacity-70 hover:border-acento hover:opacity-100',
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={hechizo.icon_url}
-                alt=""
-                className="size-full object-cover"
-                loading="lazy"
+              <IconoHechizo
+                id={hechizo.id}
+                nombre={hechizo.name}
+                className="size-full rounded object-cover"
               />
             </button>
           )

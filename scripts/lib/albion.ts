@@ -211,15 +211,87 @@ export function idsDeHechizosPasivos(datosSpells: any): Set<string> {
 }
 
 // -----------------------------------------------------------------------------
-// URLs de iconos
+// Stats
+//
+// El dump trae decenas de atributos por ítem; acá se quedan solo los que la
+// interfaz muestra. Se descartan los que valen cero: guardarlos infla el JSON
+// y, sobre todo, haría creer que el ítem "tiene" esa stat en cero cuando en
+// realidad el dump no la modela (los cascos declaran cero en todo salvo
+// item_power, pero en el juego evidentemente dan armadura: el escalado sale
+// de fórmulas que este dump no incluye).
 // -----------------------------------------------------------------------------
 
-export function urlIconoItem(uniqueName: string): string {
-  return `https://render.albiononline.com/v1/item/${encodeURIComponent(uniqueName)}.png?quality=1`
+const MAPA_STATS: Record<string, string> = {
+  '@attackdamage': 'attack_damage',
+  '@attackspeed': 'attack_speed',
+  '@attackrange': 'attack_range',
+  '@physicalarmor': 'physical_armor',
+  '@magicresistance': 'magic_resistance',
+  '@crowdcontrolresistance': 'cc_resistance',
+  '@hitpointsmax': 'hitpoints_max',
+  '@energymax': 'energy_max',
+  '@hitpointsregenerationbonus': 'hp_regen',
+  '@energyregenerationbonus': 'energy_regen',
+  '@physicalattackdamagebonus': 'physical_attack_bonus',
+  '@magicattackdamagebonus': 'magic_attack_bonus',
+  '@physicalspelldamagebonus': 'physical_spell_bonus',
+  '@magicspelldamagebonus': 'magic_spell_bonus',
+  '@healbonus': 'heal_bonus',
+  '@magiccooldownreduction': 'cooldown_reduction',
+  '@magiccasttimereduction': 'cast_time_reduction',
+  '@movespeedbonus': 'move_speed_bonus',
+  '@attackspeedbonus': 'attack_speed_bonus',
+  '@threatbonus': 'threat_bonus',
+  '@maxload': 'max_load',
+  '@weight': 'weight',
 }
 
-export function urlIconoHechizo(uiSprite: string): string {
-  return `https://render.albiononline.com/v1/spell/${encodeURIComponent(uiSprite)}.png`
+export function statsDeItem(nodo: NodoItem): Record<string, number> {
+  const stats: Record<string, number> = {}
+
+  for (const [origen, destino] of Object.entries(MAPA_STATS)) {
+    const crudo = nodo[origen]
+    if (crudo === undefined) continue
+
+    const n = Number.parseFloat(String(crudo))
+    if (Number.isNaN(n) || n === 0) continue
+
+    stats[destino] = n
+  }
+
+  return stats
+}
+
+export function tierDeItem(nodo: NodoItem): number | null {
+  const t = Number.parseInt(String(nodo['@tier'] ?? ''), 10)
+  return Number.isNaN(t) ? null : t
+}
+
+export function poderDeItem(nodo: NodoItem): number | null {
+  const p = Number.parseInt(String(nodo['@itempower'] ?? ''), 10)
+  return Number.isNaN(p) ? null : p
+}
+
+export function esDosManos(nodo: NodoItem): boolean {
+  return String(nodo['@twohanded'] ?? '') === 'true'
+}
+
+/**
+ * Poder de ítem por nivel de encantamiento: {"1": 800, "2": 900, "3": 1000}.
+ *
+ * El encantamiento cambia el poder del ítem y también su icono (la API de
+ * render acepta `T4_MAIN_SWORD@2`), así que la interfaz necesita los dos datos.
+ */
+export function encantamientosDeItem(nodo: NodoItem): Record<string, number> {
+  const resultado: Record<string, number> = {}
+
+  for (const e of comoArray<NodoItem>(nodo.enchantments?.enchantment)) {
+    const nivel = String(e['@enchantmentlevel'] ?? '').trim()
+    const poder = Number.parseInt(String(e['@itempower'] ?? ''), 10)
+    if (nivel && !Number.isNaN(poder)) resultado[nivel] = poder
+  }
+
+  return resultado
 }
 
 // -----------------------------------------------------------------------------

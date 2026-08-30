@@ -19,7 +19,11 @@ import {
   idsDeHechizosPasivos,
   nombreLegible,
   tipoDeItem,
-  urlIconoItem,
+  statsDeItem,
+  tierDeItem,
+  poderDeItem,
+  esDosManos,
+  encantamientosDeItem,
 } from './lib/albion'
 import { clienteAdmin, insertarEnLotes, leerJson } from './lib/comun'
 
@@ -29,7 +33,11 @@ type FilaItem = {
   id: string
   name: string
   type: Enums<'item_type'>
-  icon_url: string
+  tier: number | null
+  item_power: number | null
+  two_handed: boolean
+  enchantments: Record<string, number>
+  stats: Record<string, number>
 }
 
 type FilaItemSpell = {
@@ -89,7 +97,11 @@ async function main() {
         id,
         name: nombres.get(id) ?? nombreLegible(id),
         type: tipo,
-        icon_url: urlIconoItem(id),
+        tier: tierDeItem(nodo),
+        item_power: poderDeItem(nodo),
+        two_handed: esDosManos(nodo),
+        enchantments: encantamientosDeItem(nodo),
+        stats: statsDeItem(nodo),
       })
 
       for (const h of hechizosDeItem(nodo, porId, idsPasivos)) {
@@ -164,7 +176,15 @@ async function main() {
   }
 
   const conHechizos = new Set(vinculosValidos.map((v) => v.item_id)).size
-  console.log(`\n${conHechizos} ítems tienen hechizos asociados.\n`)
+  const conStats = items.filter((i) => Object.keys(i.stats).length > 0).length
+  const conEncant = items.filter((i) => Object.keys(i.enchantments).length > 0).length
+  const dosManos = items.filter((i) => i.two_handed).length
+  const conTier = items.filter((i) => i.tier !== null).length
+  const conPoder = items.filter((i) => i.item_power !== null).length
+
+  console.log(`\n${conHechizos} ítems con hechizos asociados.`)
+  console.log(`${conStats} con stats, ${conEncant} con encantamientos.`)
+  console.log(`${conTier} con tier, ${conPoder} con poder de ítem, ${dosManos} a dos manos.\n`)
 }
 
 main().catch((error) => {

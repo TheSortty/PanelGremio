@@ -1,9 +1,12 @@
 import { notFound } from 'next/navigation'
 
-import { VisorBuild } from '@/components/builds/VisorBuild'
 import { iaDisponible } from '@/actions/guia'
+import { VisorBuild } from '@/components/builds/VisorBuild'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { obtenerBuild } from '@/lib/data/builds'
+import { obtenerDatosDeItems } from '@/lib/data/items'
+import { SLOTS_EQUIPO, SLOTS_CONSUMIBLE } from '@/lib/domain/builds'
+import { resumirBuild } from '@/lib/domain/calculo'
 
 export async function generateMetadata({
   params,
@@ -29,5 +32,22 @@ export default async function DetalleBuild({
   // Se responde 404 en los dos casos: distinguirlos revelaría qué ids existen.
   if (!build) notFound()
 
-  return <VisorBuild build={build} puedeGenerarGuia={ia} />
+  // Las stats se leen en vivo de `items`, no del JSONB de la build: así un
+  // rebalanceo del juego se refleja en las builds ya guardadas.
+  const ids = [
+    ...SLOTS_EQUIPO.map((s) => build.equipment[s]?.id),
+    ...SLOTS_CONSUMIBLE.map((s) => build.consumables[s]?.id),
+  ].filter((x): x is string => Boolean(x))
+
+  const datosItems = await obtenerDatosDeItems(ids)
+  const resumen = resumirBuild(build, datosItems)
+
+  return (
+    <VisorBuild
+      build={build}
+      datosItems={datosItems}
+      resumen={resumen}
+      puedeGenerarGuia={ia}
+    />
+  )
 }

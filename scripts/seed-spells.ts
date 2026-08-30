@@ -15,14 +15,13 @@ import {
   comoArray,
   construirMapaLocalizacion,
   nombreLegible,
-  urlIconoHechizo,
 } from './lib/albion'
 import { clienteAdmin, insertarEnLotes, leerJson, DIR_DATOS } from './lib/comun'
 
 import fs from 'node:fs'
 import path from 'node:path'
 
-type FilaHechizo = { id: string; name: string; icon_url: string }
+type FilaHechizo = { id: string; name: string }
 
 async function main() {
   const supabase = clienteAdmin()
@@ -54,17 +53,20 @@ async function main() {
       const id = String(hechizo?.['@uniquename'] ?? '').trim()
       if (!id) continue
 
-      // Sin sprite no hay icono que mostrar; para la interfaz no sirve.
+      // Sin sprite el hechizo no tiene representación visual en el juego;
+      // se descarta igual que antes.
+      //
+      // Pero OJO: el sprite NO se usa para armar la URL del icono. El endpoint
+      // de render responde al @uniquename del hechizo, no a su @uisprite.
+      // Confundirlos es el motivo de que todos los iconos de habilidad
+      // estuvieran rotos. La URL ahora la calcula la aplicación con
+      // urlIconoHechizo(id), en src/lib/domain/albion.ts.
       const sprite = String(hechizo?.['@uisprite'] ?? '').trim()
       if (!sprite) continue
 
       const traducido = localizacion?.get(`@SPELLS_${id}`)
 
-      porId.set(id, {
-        id,
-        name: traducido || nombreLegible(id),
-        icon_url: urlIconoHechizo(sprite),
-      })
+      porId.set(id, { id, name: traducido || nombreLegible(id) })
     }
   }
 

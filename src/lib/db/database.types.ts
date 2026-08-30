@@ -215,21 +215,33 @@ export type Database = {
       }
       items: {
         Row: {
-          icon_url: string
+          enchantments: Json
           id: string
+          item_power: number | null
           name: string
+          stats: Json
+          tier: number | null
+          two_handed: boolean
           type: Database["public"]["Enums"]["item_type"]
         }
         Insert: {
-          icon_url: string
+          enchantments?: Json
           id: string
+          item_power?: number | null
           name: string
+          stats?: Json
+          tier?: number | null
+          two_handed?: boolean
           type: Database["public"]["Enums"]["item_type"]
         }
         Update: {
-          icon_url?: string
+          enchantments?: Json
           id?: string
+          item_power?: number | null
           name?: string
+          stats?: Json
+          tier?: number | null
+          two_handed?: boolean
           type?: Database["public"]["Enums"]["item_type"]
         }
         Relationships: []
@@ -314,17 +326,14 @@ export type Database = {
       }
       spells: {
         Row: {
-          icon_url: string
           id: string
           name: string
         }
         Insert: {
-          icon_url: string
           id: string
           name: string
         }
         Update: {
-          icon_url?: string
           id?: string
           name?: string
         }
@@ -412,7 +421,6 @@ export type Database = {
       hechizos_de_item: {
         Args: { item: string }
         Returns: {
-          icon_url: string
           id: string
           name: string
           position: number

@@ -84,17 +84,24 @@ export const ETIQUETAS_SPELL_SLOT: Record<SpellSlot, string> = {
 // desactualizados en cuanto cambiaba el catálogo.
 // -----------------------------------------------------------------------------
 
+// Se guarda el mínimo indispensable. El icono se calcula a partir del id
+// (ver urlIconoItem) y las stats se leen en vivo de la tabla `items` al abrir
+// la build: así, si un parche rebalancea un arma, la build muestra los valores
+// actuales en lugar de una foto vieja.
+//
+// Antes se serializaba el objeto Item entero, con su icon_url congelada y su
+// mapa completo de habilidades adentro.
 export const refItemSchema = z.object({
   id: z.string().min(1).max(200),
   name: z.string().min(1).max(200),
-  icon_url: z.string().url().max(500),
+  /** Nivel de encantamiento, 0 a 4. Cambia el poder del ítem y su icono. */
+  ench: z.number().int().min(0).max(4).default(0),
 })
 export type RefItem = z.infer<typeof refItemSchema>
 
 export const refHechizoSchema = z.object({
   id: z.string().min(1).max(200),
   name: z.string().min(1).max(200),
-  icon_url: z.string().url().max(500),
 })
 export type RefHechizo = z.infer<typeof refHechizoSchema>
 
@@ -125,6 +132,23 @@ export const habilidadesSchema = z.record(
   refHechizoSchema,
 )
 export type Habilidades = z.infer<typeof habilidadesSchema>
+
+/**
+ * Un arma a dos manos ocupa también la mano secundaria.
+ *
+ * Es la única regla de compatibilidad que el dump permite verificar sin
+ * inventar nada: `@twohanded` viene declarado por ítem (581 de 2104 lo son).
+ */
+export function conflictoDeSlots(
+  equipo: Equipo,
+  esDosManos: (itemId: string) => boolean,
+): string | null {
+  const arma = equipo.weapon
+  if (arma && equipo.offhand && esDosManos(arma.id)) {
+    return `${arma.name} es un arma a dos manos: no se puede llevar nada en la mano secundaria.`
+  }
+  return null
+}
 
 export const CATEGORIAS_BUILD = [
   'PvE',
