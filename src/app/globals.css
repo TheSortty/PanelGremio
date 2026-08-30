@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+
+/*
+  Tailwind 4 se configura desde CSS: no hay tailwind.config.js.
+
+  La versión anterior cargaba Tailwind desde cdn.tailwindcss.com, que compila
+  en el navegador en cada carga: sin purge, sin tipos, y con un aviso explícito
+  de la propia documentación de que no es para producción. Además definía un
+  tema de `typography` que nunca se aplicaba, porque el plugin no estaba.
+*/
+
+@theme {
+  /* Superficies, de la más profunda a la más elevada */
+  --color-fondo: oklch(0.19 0.015 265);
+  --color-superficie: oklch(0.24 0.018 265);
+  --color-superficie-alta: oklch(0.29 0.02 265);
+  --color-borde: oklch(0.35 0.02 265);
+  --color-borde-suave: oklch(0.3 0.018 265);
+
+  /* Texto */
+  --color-texto: oklch(0.93 0.01 265);
+  --color-texto-suave: oklch(0.72 0.02 265);
+  --color-texto-tenue: oklch(0.58 0.02 265);
+
+  /* Acento: el índigo del diseño original, en oklch para que las variantes
+     mantengan el mismo brillo percibido */
+  --color-acento: oklch(0.62 0.19 274);
+  --color-acento-fuerte: oklch(0.55 0.2 274);
+  --color-acento-suave: oklch(0.35 0.09 274);
+
+  /* Estados */
+  --color-exito: oklch(0.7 0.16 152);
+  --color-exito-fondo: oklch(0.33 0.08 152);
+  --color-alerta: oklch(0.78 0.15 85);
+  --color-alerta-fondo: oklch(0.36 0.08 85);
+  --color-peligro: oklch(0.68 0.19 25);
+  --color-peligro-fondo: oklch(0.34 0.1 25);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-panel: 0.75rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Un foco visible y consistente. El original dependía del contorno por
+     defecto del navegador, que sobre fondo oscuro casi no se ve. */
+  :focus-visible {
+    outline: 2px solid var(--color-acento);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-acento-suave);
+  }
+}
+
+@layer components {
+  /* Campos de formulario. En la versión anterior las clases de input estaban
+     repetidas literalmente en ocho archivos distintos. */
+  .campo {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-borde);
+    background-color: var(--color-fondo);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-texto);
+    transition: border-color 150ms ease;
+  }
+
+  .campo::placeholder {
+    color: var(--color-texto-tenue);
+  }
+
+  .campo:focus {
+    border-color: var(--color-acento);
+    outline: none;
+  }
+
+  .campo:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/*
+  Estilos de la guía de IA en markdown.
+
+  Reemplazan al plugin @tailwindcss/typography, que la versión anterior
+  configuraba pero nunca cargaba, y al `dangerouslySetInnerHTML` con un
+  replace de \n por <br /> que ni renderizaba markdown ni era seguro.
+*/
+.markdown {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--color-texto-suave);
+}
+
+.markdown > * + * {
+  margin-top: 0.85em;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  color: var(--color-texto);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.4em;
+}
+
+.markdown h1 { font-size: 1.15rem; }
+.markdown h2 { font-size: 1.05rem; }
+.markdown h3 { font-size: 0.95rem; }
+
+.markdown strong {
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
+.markdown a {
+  color: var(--color-acento);
+  text-decoration: underline;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.25rem;
+}
+
+.markdown ul { list-style: disc; }
+.markdown ol { list-style: decimal; }
+
+.markdown li + li {
+  margin-top: 0.35em;
+}
+
+.markdown code {
+  background-color: var(--color-superficie-alta);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+}
+
+.markdown pre {
+  background-color: var(--color-superficie-alta);
+  border-radius: 0.5rem;
+  padding: 0.85rem;
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown blockquote {
+  border-left: 3px solid var(--color-borde);
+  padding-left: 0.85rem;
+  color: var(--color-texto-tenue);
+}

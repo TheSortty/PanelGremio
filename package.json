@@ -1,22 +1,42 @@
 {
   "name": "panel-gremio",
+  "version": "2.0.0",
   "private": true,
-  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:types": "supabase gen types typescript --linked > src/lib/db/database.types.ts",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "seed:items": "tsx scripts/seed-items.ts",
+    "seed:spells": "tsx scripts/seed-spells.ts",
+    "seed": "npm run seed:spells && npm run seed:items",
+    "data:download": "tsx scripts/descargar-datos.ts"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@google/genai": "^2.19.0",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.112.4",
+    "clsx": "^2.1.1",
+    "next": "^16.3.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "supabase": "^2.116.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
   }
 }
