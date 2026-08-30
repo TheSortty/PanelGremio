@@ -1,5 +1,28 @@
 /**
- * Build para Cloudflare Workers.
+ * Build para Cloudflare Workers. Es lo que corre `npm run build`.
+ *
+ * POR QUÉ `npm run build` Y NO UN SCRIPT APARTE
+ *
+ * Con la mayoría de los frameworks alcanza con `npm run build` porque su salida
+ * ya es servible. Next.js sobre Workers no: `next build` produce un servidor de
+ * Node, y Workers no ejecuta Node. Hace falta transformarlo a un bundle de
+ * Worker, que es lo que hace OpenNext.
+ *
+ * Poniendo ese proceso completo detrás de `npm run build`, el ajuste por
+ * defecto del panel de Cloudflare ya hace lo correcto y no hay que recordar un
+ * comando especial. Para un `next build` pelado existe `npm run build:next`.
+ *
+ * OJO CON LA RECURSIÓN
+ *
+ * @opennextjs/aws, cuando construye la app por su cuenta, ejecuta
+ * `npm run build` (ver buildNextApp.js). Como acá `npm run build` ES este
+ * script, eso sería un bucle infinito. No pasa porque:
+ *
+ *   - el paso 1 llama a `npx next build` directamente, no a `npm run build`;
+ *   - el paso 3 pasa --skipNextBuild, así que el adaptador nunca construye.
+ *
+ * Si alguna vez se saca --skipNextBuild, hay que sacar también este script de
+ * `npm run build`.
  *
  * EL PROBLEMA QUE RESUELVE
  *

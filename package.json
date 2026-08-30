@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/build-cloudflare.mjs",
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
@@ -16,11 +16,11 @@
     "seed:spells": "tsx scripts/seed-spells.ts",
     "seed": "npm run seed:spells && npm run seed:items",
     "data:download": "tsx scripts/descargar-datos.ts",
-    "deploy": "npm run cf:build && wrangler deploy",
+    "deploy": "npm run build && wrangler deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "cf:build": "node scripts/build-cloudflare.mjs",
-    "cf:preview": "npm run cf:build && wrangler dev"
+    "cf:preview": "npm run build && wrangler dev",
+    "build:next": "next build"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",

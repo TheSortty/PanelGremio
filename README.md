@@ -197,36 +197,54 @@ El proyecto está configurado para Cloudflare con
 
 ### Ajustes del proyecto en Cloudflare
 
+Ninguno: los valores por defecto ya sirven.
+
 | Campo | Valor |
 |---|---|
-| Build command | `npm run cf:build` |
+| Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
 | Output directory | *(vacío — lo define `wrangler.jsonc`)* |
 
-**El build command NO puede ser `npm run build`.** Ese produce un servidor de
-Node que Workers no ejecuta; hace falta el paso de OpenNext.
+`npm run build` **no** es un `next build` pelado: corre
+`scripts/build-cloudflare.mjs`, que hace el build de Next y después lo
+transforma en un bundle de Worker con OpenNext. Con la mayoría de los
+frameworks alcanza con el build a secas porque su salida ya es servible; Next
+sobre Workers necesita ese paso extra, porque `next build` produce un servidor
+de Node y Workers no ejecuta Node.
+
+Para un `next build` sin la parte de Cloudflare: `npm run build:next`.
 
 ### Variables de entorno
 
 Distinguí dos grupos, porque van en lugares distintos:
 
-**Variables de *build*** — Next las incrusta en el JavaScript del navegador en
-tiempo de compilación, así que tienen que estar presentes **durante el build**,
-no solo en runtime:
+**Variables de build** — ya están en `.env.production`, versionado.
+
+Next las incrusta en el JavaScript del navegador al compilar, así que tienen
+que existir **durante el build**, no solo en runtime. Como son públicas por
+diseño (viajan a cada visitante igual), se versionan en vez de cargarlas a mano
+en el panel:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-NEXT_PUBLIC_SITE_URL      # el dominio real, no localhost
 ```
 
-**Secretos de *runtime*** — solo servidor, se cargan como Secrets:
+Lo que protege la base es RLS, no el secreto de esa clave.
 
+`NEXT_PUBLIC_SITE_URL` se omite a propósito: sin ella, `urlDelSitio()` deriva el
+dominio de la propia petición, que es correcto en Workers. Solo hace falta
+fijarla con un dominio propio detrás de otro proxy.
+
+**Secretos de runtime** — solo servidor, se cargan con wrangler:
+
+```bash
+wrangler secret put SUPABASE_SECRET_KEY   # obligatorio
+wrangler secret put GEMINI_API_KEY        # opcional: guías por IA
+wrangler secret put STEAM_API_KEY         # opcional: nombre y avatar de Steam
 ```
-SUPABASE_SECRET_KEY
-STEAM_API_KEY             # opcional
-GEMINI_API_KEY            # opcional
-```
+
+Estos NO pueden ir en `.env.production`: se filtrarían en el repositorio.
 
 ### Después del primer deploy
 
