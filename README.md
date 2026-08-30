@@ -103,20 +103,47 @@ método. Nadie ve el panel hasta que un administrador la aprueba.
 
 ---
 
-## Roles
+## Roles y jerarquía
 
-| Rol | Builds y mapa | Métricas y auditoría | Gestión de usuarios |
-|---|:-:|:-:|:-:|
-| Maestro del Gremio | ✅ | ✅ | ✅ |
-| Mano Derecha | ✅ | ✅ | ✅ |
-| Oficial | ✅ | ✅ | — |
-| Miembro / Iniciado | ✅ | — | — |
-| Invitado | sin acceso | — | — |
+Hay **dos ejes independientes**, y conviene no confundirlos:
 
-Estos permisos están definidos **dos veces a propósito**: en la base
-(`private.es_admin()` y `private.es_oficial()`, que son las que mandan de verdad
-vía RLS) y en `src/lib/domain/roles.ts`, que solo decide qué se dibuja. Si
-cambiás uno, cambiá el otro.
+**`status` — ¿la cuenta entra?**
+
+| Estado | Significado |
+|---|---|
+| `pending` | Se registró, espera aprobación. Tiene sesión pero solo ve la pantalla de espera. |
+| `active` | Aprobada. Entra al panel. |
+| `rejected` | Rechazada. Puede loguearse pero no pasa de la pantalla de espera. |
+
+Los tres métodos de acceso (correo, Discord, Steam) desembocan en el mismo
+perfil `pending` / `Invitado`. El método de login no es un tipo de usuario.
+
+**`role` — ¿qué puede hacer una vez adentro?**
+
+Cada rol agrega exactamente una capacidad sobre el anterior:
+
+| Rol | Leer | Crear builds | Editar ajenas | Mapa | Moderar mapa | Métricas y auditoría | Gestionar usuarios | Ceder mando |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Maestro del Gremio | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Mano Derecha | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
+| Oficial | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | — |
+| Miembro | ✅ | ✅ | — | ✅ | — | — | — | — |
+| Iniciado | ✅ | ✅ | — | — | — | — | — | — |
+| Invitado | ✅ | — | — | — | — | — | — | — |
+
+"Editar ajenas" incluye borrarlas; el autor siempre puede con las propias.
+"Ceder mando" pasa el rol de Maestro a otro miembro activo y baja al saliente
+a Mano Derecha, en una sola transacción.
+
+Estos permisos están definidos **dos veces a propósito**:
+
+- En la base, en `private.rango_rol()` y las funciones `private.puede_*()`.
+  **Son las que mandan de verdad**, aplicadas por RLS.
+- En `src/lib/domain/roles.ts`, que solo decide qué se dibuja en pantalla.
+
+Si cambiás uno, cambiá el otro. Cuando se desincronizan pasa lo que pasaba
+antes: la interfaz dejaba entrar a un Oficial a la pantalla de administración
+y el backend le devolvía 403 en cada llamada.
 
 ---
 

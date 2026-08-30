@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { exigirAdmin } from '@/lib/auth/sesion'
-import { ROLES } from '@/lib/domain/roles'
+import { ROLES, esMaestro } from '@/lib/domain/roles'
 import { createClient } from '@/lib/supabase/server'
 
 export type ResultadoUsuario = { ok: true } | { ok: false; error: string }
@@ -67,6 +67,41 @@ export async function cambiarEstado(
   revalidatePath('/admin')
   revalidatePath('/registro')
   revalidatePath('/panel')
+  return { ok: true }
+}
+
+/**
+ * Cede el liderazgo del gremio.
+ *
+ * Antes no había salida: admin_cambiar_rol impide que un Maestro se cambie el
+ * rol a sí mismo y solo un Maestro puede asignar ese rol, así que si el Maestro
+ * dejaba el gremio nadie podía sucederlo sin editar la base a mano.
+ *
+ * Los dos cambios (sucesor a Maestro, saliente a Mano Derecha) ocurren en una
+ * sola transacción: en dos pasos podría quedar el gremio con dos Maestros o
+ * con ninguno.
+ */
+export async function transferirLiderazgo(
+  sucesorId: string,
+): Promise<ResultadoUsuario> {
+  const perfil = await exigirAdmin()
+
+  if (!esMaestro(perfil.role)) {
+    return {
+      ok: false,
+      error: 'Solo el Maestro del Gremio puede transferir el liderazgo.',
+    }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('transferir_liderazgo', {
+    nuevo_maestro: sucesorId,
+  })
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/admin')
+  revalidatePath('/registro')
   return { ok: true }
 }
 

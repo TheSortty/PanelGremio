@@ -5,6 +5,7 @@ import { Boton } from '@/components/ui/Boton'
 import { Vacio } from '@/components/ui/Vacio'
 import { CATEGORIAS_BUILD } from '@/lib/domain/builds'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
+import { puedeCrearBuilds } from '@/lib/domain/roles'
 import { listarBuilds } from '@/lib/data/builds'
 import { cn } from '@/lib/utils/cn'
 
@@ -19,7 +20,8 @@ export default async function Builds({
   // paralelo: sin este guard la consulta puede arrancar antes de que el
   // redirect del layout resuelva, y estalla con un error de permisos.
   // obtenerPerfil() está memorizado por petición, así que no cuesta nada.
-  await exigirMiembroActivo()
+  const perfil = await exigirMiembroActivo()
+  const puedeCrear = puedeCrearBuilds(perfil.role)
 
   const { categoria } = await searchParams
 
@@ -35,9 +37,11 @@ export default async function Builds({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold">Builds</h1>
-        <Link href="/builds/nueva">
-          <Boton>Crear build</Boton>
-        </Link>
+        {puedeCrear && (
+          <Link href="/builds/nueva">
+            <Boton>Crear build</Boton>
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
@@ -73,9 +77,11 @@ export default async function Builds({
           titulo={filtro ? `Todavía no hay builds de ${filtro}` : 'Todavía no hay builds'}
           descripcion="Creá la primera y quedará disponible para todo el gremio."
           accion={
-            <Link href="/builds/nueva">
-              <Boton>Crear build</Boton>
-            </Link>
+            puedeCrear ? (
+              <Link href="/builds/nueva">
+                <Boton>Crear build</Boton>
+              </Link>
+            ) : undefined
           }
         />
       ) : (

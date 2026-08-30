@@ -427,6 +427,7 @@ export type Database = {
           slot: Database["public"]["Enums"]["spell_slot"]
         }[]
       }
+      limpiar_mapa: { Args: never; Returns: number }
       metricas_actividad: {
         Args: { zona?: string }
         Returns: {
@@ -437,6 +438,10 @@ export type Database = {
         }[]
       }
       registrar_actividad: { Args: never; Returns: undefined }
+      transferir_liderazgo: {
+        Args: { nuevo_maestro: string }
+        Returns: undefined
+      }
     }
     Enums: {
       guild_role:

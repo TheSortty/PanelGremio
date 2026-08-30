@@ -3,55 +3,97 @@ import type { Enums } from '@/lib/db/database.types'
 export type GuildRole = Enums<'guild_role'>
 export type UserStatus = Enums<'user_status'>
 
-/** De mayor a menor autoridad. El índice sirve para comparar jerarquía. */
-export const ROLES: readonly GuildRole[] = [
+/**
+ * Jerarquía, de mayor a menor autoridad.
+ *
+ * El índice ES el rango: 0 manda sobre todos. Es el mismo orden que
+ * private.rango_rol() en la base.
+ */
+export const ROLES = [
   'Maestro del Gremio',
   'Mano Derecha',
   'Oficial',
   'Miembro',
   'Iniciado',
   'Invitado',
-] as const
-
-/**
- * Permisos del panel.
- *
- * Esto es el espejo exacto de las funciones private.es_admin() y
- * private.es_oficial() de la base. La base sigue siendo la autoridad —estas
- * funciones solo deciden qué se dibuja en pantalla—, pero tienen que coincidir
- * o pasa lo de la versión anterior: el front dejaba entrar a 'Oficial' a las
- * pantallas de administración y el backend le devolvía 403 en cada llamada.
- *
- * La regla, ahora explícita: un Oficial VE métricas y auditoría, pero no
- * gestiona usuarios.
- */
-const ROLES_ADMIN: readonly GuildRole[] = ['Maestro del Gremio', 'Mano Derecha']
-const ROLES_OFICIAL: readonly GuildRole[] = [
-  'Maestro del Gremio',
-  'Mano Derecha',
-  'Oficial',
-]
-
-export function esAdmin(rol: GuildRole | null | undefined): boolean {
-  return rol != null && ROLES_ADMIN.includes(rol)
-}
-
-export function esOficial(rol: GuildRole | null | undefined): boolean {
-  return rol != null && ROLES_OFICIAL.includes(rol)
-}
-
-/** Puede ver métricas y el registro de auditoría. */
-export const puedeVerMetricas = esOficial
-/** Puede aprobar, cambiar roles y eliminar usuarios. */
-export const puedeGestionarUsuarios = esAdmin
+] as const satisfies readonly GuildRole[]
 
 export function rangoDeRol(rol: GuildRole): number {
-  const i = ROLES.indexOf(rol)
+  const i = ROLES.indexOf(rol as (typeof ROLES)[number])
   return i === -1 ? ROLES.length : i
+}
+
+/** ¿El rol llega al nivel mínimo pedido? Menor rango es más autoridad. */
+function alMenos(rol: GuildRole | null | undefined, minimo: GuildRole): boolean {
+  if (!rol) return false
+  return rangoDeRol(rol) <= rangoDeRol(minimo)
+}
+
+/**
+ * Capacidades del panel.
+ *
+ * Espejo exacto de las funciones private.* de la base, que son las que mandan
+ * de verdad vía RLS. Esto solo decide qué se dibuja: si las dos se desincronizan
+ * vuelve el problema que tenía la versión anterior, donde el front dejaba
+ * entrar a un Oficial a las pantallas de administración y el backend le
+ * devolvía 403 en cada llamada.
+ *
+ * Cada rol suma una capacidad sobre el anterior. Antes había seis roles con
+ * solo tres niveles reales: Invitado, Iniciado y Miembro hacían lo mismo.
+ */
+
+/** Invitado y superiores: leer builds, mapa, panel. */
+export const puedeLeer = (rol: GuildRole | null | undefined) =>
+  alMenos(rol, 'Invitado')
+
+/** Iniciado y superiores: crear y editar sus propias builds. */
+export const puedeCrearBuilds = (rol: GuildRole | null | undefined) =>
+  alMenos(rol, 'Iniciado')
+
+/** Miembro y superiores: poner marcadores en el mapa. */
+export const puedeUsarMapa = (rol: GuildRole | null | undefined) =>
+  alMenos(rol, 'Miembro')
+
+/** Oficial y superiores: editar builds ajenas, moderar el mapa, ver métricas. */
+export const esOficial = (rol: GuildRole | null | undefined) =>
+  alMenos(rol, 'Oficial')
+
+/** Mano Derecha y superiores: aprobar cuentas, cambiar roles, dar de baja. */
+export const esAdmin = (rol: GuildRole | null | undefined) =>
+  alMenos(rol, 'Mano Derecha')
+
+/** Solo el Maestro del Gremio: transferir el liderazgo. */
+export const esMaestro = (rol: GuildRole | null | undefined) =>
+  alMenos(rol, 'Maestro del Gremio')
+
+// Alias por lo que hace, no por el rol que lo habilita.
+export const puedeVerMetricas = esOficial
+export const puedeModerarMapa = esOficial
+export const puedeGestionarUsuarios = esAdmin
+export const puedeTransferirLiderazgo = esMaestro
+
+/** ¿Puede editar o borrar esta build? */
+export function puedeEditarBuild(
+  rol: GuildRole | null | undefined,
+  autorId: string | null | undefined,
+  usuarioId: string,
+): boolean {
+  if (esOficial(rol)) return true
+  return autorId === usuarioId && puedeCrearBuilds(rol)
 }
 
 export const ETIQUETAS_ESTADO: Record<UserStatus, string> = {
   pending: 'Pendiente',
   active: 'Activo',
   rejected: 'Rechazado',
+}
+
+/** Lo que suma cada rol respecto del anterior. Se muestra en Administración. */
+export const CAPACIDAD_DE_ROL: Record<GuildRole, string> = {
+  'Maestro del Gremio': 'Manda sobre todo; puede transferir el liderazgo',
+  'Mano Derecha': 'Aprueba cuentas, cambia roles y da de baja',
+  Oficial: 'Edita builds ajenas, modera el mapa y ve métricas',
+  Miembro: 'Crea builds y pone marcadores en el mapa',
+  Iniciado: 'Crea y edita sus propias builds',
+  Invitado: 'Solo lectura',
 }

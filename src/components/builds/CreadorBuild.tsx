@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
 
-import { crearBuild } from '@/actions/builds'
+import { actualizarBuild, crearBuild } from '@/actions/builds'
 import { SelectorEncantamiento } from '@/components/builds/SelectorEncantamiento'
 import { SelectorHechizo } from '@/components/builds/SelectorHechizo'
 import { SelectorItem } from '@/components/builds/SelectorItem'
@@ -33,15 +33,40 @@ const ORDEN_SLOTS: SpellSlot[] = ['Q', 'W', 'E', 'Passive']
 
 type HechizosPorSlot = Partial<Record<SpellSlot, RefHechizo[]>>
 
-export function CreadorBuild() {
-  const [titulo, setTitulo] = useState('')
-  const [categoria, setCategoria] = useState<string>(CATEGORIAS_BUILD[0])
-  const [descripcion, setDescripcion] = useState('')
-  const [equipo, setEquipo] = useState<Equipo>({ ...EQUIPO_VACIO })
-  const [consumibles, setConsumibles] = useState<Consumibles>({
-    ...CONSUMIBLES_VACIOS,
-  })
-  const [habilidades, setHabilidades] = useState<Habilidades>({})
+export type BuildInicial = {
+  id: string
+  title: string
+  category: string
+  description: string
+  equipment: Equipo
+  consumables: Consumibles
+  abilities: Habilidades
+}
+
+/**
+ * Formulario de build, para crear y para editar.
+ *
+ * Con `inicial` edita esa build; sin él, crea una nueva. Un solo componente
+ * para los dos casos evita que el editor y el creador se separen con el
+ * tiempo, que es exactamente cómo nació el bug de las claves de habilidad.
+ */
+export function CreadorBuild({ inicial }: { inicial?: BuildInicial }) {
+  const editando = inicial !== undefined
+
+  const [titulo, setTitulo] = useState(inicial?.title ?? '')
+  const [categoria, setCategoria] = useState<string>(
+    inicial?.category ?? CATEGORIAS_BUILD[0],
+  )
+  const [descripcion, setDescripcion] = useState(inicial?.description ?? '')
+  const [equipo, setEquipo] = useState<Equipo>(
+    inicial?.equipment ?? { ...EQUIPO_VACIO },
+  )
+  const [consumibles, setConsumibles] = useState<Consumibles>(
+    inicial?.consumables ?? { ...CONSUMIBLES_VACIOS },
+  )
+  const [habilidades, setHabilidades] = useState<Habilidades>(
+    inicial?.abilities ?? {},
+  )
   const [hechizosDisponibles, setHechizosDisponibles] = useState<
     Partial<Record<SlotEquipo, HechizosPorSlot>>
   >({})
@@ -85,6 +110,19 @@ export function CreadorBuild() {
       ;(agrupados[fila.slot] ??= []).push({ id: fila.id, name: fila.name })
     }
     setHechizosDisponibles((prev) => ({ ...prev, [slot]: agrupados }))
+  }, [])
+
+  // Al editar hay que traer los datos de las piezas que ya estaban puestas:
+  // sin ellos no se dibujan los selectores de encantamiento ni se sabe si el
+  // arma es a dos manos.
+  useEffect(() => {
+    if (!inicial) return
+    for (const slot of SLOTS_EQUIPO) {
+      const ref = inicial.equipment[slot]
+      if (ref) void cargarItem(slot, ref.id)
+    }
+    // Solo al montar: después el estado lo maneja elegirItem.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function elegirItem(slot: SlotEquipo, item: RefItem | null) {
@@ -154,15 +192,21 @@ export function CreadorBuild() {
     e.preventDefault()
     setError(null)
 
+    const datos = {
+      title: titulo,
+      category: categoria,
+      description: descripcion,
+      equipment: equipo,
+      consumables: consumibles,
+      abilities: habilidades,
+    }
+
     iniciarGuardado(async () => {
-      const resultado = await crearBuild({
-        title: titulo,
-        category: categoria,
-        description: descripcion,
-        equipment: equipo,
-        consumables: consumibles,
-        abilities: habilidades,
-      })
+      const resultado = editando
+        ? await actualizarBuild(inicial.id, datos)
+        : await crearBuild(datos)
+
+      // Si sale bien, la acción redirige y esto no llega a ejecutarse.
       if (resultado && !resultado.ok) setError(resultado.error)
     })
   }
@@ -323,11 +367,22 @@ export function CreadorBuild() {
         </div>
       </Card>
 
+      {editando && (
+        <Aviso tono="info">
+          Al cambiar el equipamiento se descarta la guía de IA generada, porque
+          describe la build anterior.
+        </Aviso>
+      )}
+
       {error && <Aviso tono="error">{error}</Aviso>}
 
       <div className="flex justify-end gap-2">
         <Boton type="submit" disabled={guardando}>
-          {guardando ? 'Guardando…' : 'Guardar build'}
+          {guardando
+            ? 'Guardando…'
+            : editando
+              ? 'Guardar cambios'
+              : 'Crear build'}
         </Boton>
       </div>
     </form>

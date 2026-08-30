@@ -4,14 +4,26 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 
-import { cambiarEstado, cambiarRol, eliminarUsuario } from '@/actions/usuarios'
+import {
+  cambiarEstado,
+  cambiarRol,
+  eliminarUsuario,
+  transferirLiderazgo,
+} from '@/actions/usuarios'
 import { Aviso } from '@/components/ui/Aviso'
 import { Boton } from '@/components/ui/Boton'
 import { Card } from '@/components/ui/Card'
 import { Etiqueta } from '@/components/ui/Etiqueta'
 import { Modal } from '@/components/ui/Modal'
 import { Vacio } from '@/components/ui/Vacio'
-import { ETIQUETAS_ESTADO, ROLES, type GuildRole, type UserStatus } from '@/lib/domain/roles'
+import {
+  CAPACIDAD_DE_ROL,
+  ETIQUETAS_ESTADO,
+  ROLES,
+  esMaestro,
+  type GuildRole,
+  type UserStatus,
+} from '@/lib/domain/roles'
 import { cn } from '@/lib/utils/cn'
 import { fechaCorta, tiempoRelativo } from '@/lib/utils/formato'
 
@@ -51,6 +63,7 @@ export function TablaUsuarios({
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [aEliminar, setAEliminar] = useState<Usuario | null>(null)
+  const [aSuceder, setASuceder] = useState<Usuario | null>(null)
   const [pendiente, iniciar] = useTransition()
 
   function ejecutar(accion: () => Promise<{ ok: boolean; error?: string }>) {
@@ -137,7 +150,7 @@ export function TablaUsuarios({
                           className="rounded-md border border-borde bg-superficie-alta px-2 py-1 text-xs disabled:opacity-50"
                         >
                           {ROLES.map((rol) => (
-                            <option key={rol} value={rol}>
+                            <option key={rol} value={rol} title={CAPACIDAD_DE_ROL[rol]}>
                               {rol}
                             </option>
                           ))}
@@ -184,6 +197,21 @@ export function TablaUsuarios({
                               Rechazar
                             </Boton>
                           )}
+                          {/* Ceder el liderazgo: solo el Maestro, y solo a un
+                              miembro activo que no sea él mismo. Antes no
+                              existía forma de hacerlo desde la aplicación. */}
+                          {esMaestro(rolAdmin) &&
+                            !esUnoMismo &&
+                            usuario.status === 'active' && (
+                              <Boton
+                                tamano="sm"
+                                variante="secundario"
+                                disabled={pendiente}
+                                onClick={() => setASuceder(usuario)}
+                              >
+                                Ceder mando
+                              </Boton>
+                            )}
                           <Boton
                             tamano="sm"
                             variante="peligro"
@@ -231,6 +259,38 @@ export function TablaUsuarios({
             }}
           >
             {pendiente ? 'Eliminando…' : 'Eliminar'}
+          </Boton>
+        </div>
+      </Modal>
+
+      <Modal
+        abierto={aSuceder !== null}
+        onCerrar={() => setASuceder(null)}
+        titulo="Ceder el liderazgo"
+      >
+        <p className="text-sm text-texto-suave">
+          <span className="font-medium text-texto">{aSuceder?.name}</span> pasa a
+          ser Maestro del Gremio, y vos bajás a Mano Derecha.
+        </p>
+        <p className="mt-2 text-sm text-texto-tenue">
+          Los dos cambios ocurren juntos. Después de esto ya no vas a poder
+          revertirlo por tu cuenta: solo el nuevo Maestro puede devolverte el
+          mando.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Boton variante="secundario" onClick={() => setASuceder(null)}>
+            Cancelar
+          </Boton>
+          <Boton
+            variante="peligro"
+            disabled={pendiente}
+            onClick={() => {
+              const objetivo = aSuceder
+              setASuceder(null)
+              if (objetivo) ejecutar(() => transferirLiderazgo(objetivo.id))
+            }}
+          >
+            {pendiente ? 'Transfiriendo…' : 'Ceder el mando'}
           </Boton>
         </div>
       </Modal>

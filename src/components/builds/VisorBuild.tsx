@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { AccionesBuild } from '@/components/builds/AccionesBuild'
 import { GuiaIA } from '@/components/builds/GuiaIA'
 import { IconoHechizo, IconoItem } from '@/components/builds/Icono'
 import { ListaStats } from '@/components/builds/ListaStats'
@@ -106,11 +107,13 @@ export function VisorBuild({
   datosItems,
   resumen,
   puedeGenerarGuia,
+  puedeEditar,
 }: {
   build: Build
   datosItems: Map<string, DatosItem>
   resumen: ResumenBuild
   puedeGenerarGuia: boolean
+  puedeEditar: boolean
 }) {
   /**
    * Lee con claveHabilidad(), el mismo helper que usó el creador para escribir.
@@ -153,7 +156,12 @@ export function VisorBuild({
               {fechaCorta(build.created_at)}
             </p>
           </div>
-          <Etiqueta tono="acento">{build.category}</Etiqueta>
+          <div className="flex flex-col items-end gap-2">
+            <Etiqueta tono="acento">{build.category}</Etiqueta>
+            {puedeEditar && (
+              <AccionesBuild buildId={build.id} titulo={build.title} />
+            )}
+          </div>
         </div>
 
         {build.description && (

@@ -61,6 +61,64 @@ export async function crearBuild(entrada: unknown): Promise<ResultadoAccion> {
   redirect(`/builds/${data.id}`)
 }
 
+/**
+ * Edita una build existente.
+ *
+ * Antes no había forma de modificar una build: una vez creada quedaba fija
+ * para siempre, sin botón de editar ni de borrar en toda la interfaz.
+ *
+ * Quién puede editar lo decide la política RLS (el autor la suya, un Oficial
+ * cualquiera). Acá no se filtra por autor a propósito: duplicar esa regla en
+ * el cliente es justamente lo que hace que las dos capas se desincronicen.
+ */
+export async function actualizarBuild(
+  id: string,
+  entrada: unknown,
+): Promise<ResultadoAccion> {
+  await exigirMiembroActivo()
+
+  const validado = buildInputSchema.safeParse(entrada)
+  if (!validado.success) {
+    return {
+      ok: false,
+      error: 'Revisá los datos de la build.',
+      campos: validado.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  const { title, category, description, equipment, consumables, abilities } =
+    validado.data
+
+  const supabase = await createClient()
+
+  const { error, count } = await supabase
+    .from('builds')
+    .update(
+      {
+        title,
+        category,
+        description: description || null,
+        equipment,
+        consumables,
+        abilities,
+        // La guía cacheada describe el equipamiento viejo: al cambiarlo se
+        // invalida en vez de dejar un texto que ya no corresponde.
+        ai_guide: null,
+      },
+      { count: 'exact' },
+    )
+    .eq('id', id)
+
+  if (error) return { ok: false, error: error.message }
+  if (count === 0) {
+    return { ok: false, error: 'No tenés permiso para editar esta build.' }
+  }
+
+  revalidatePath('/builds')
+  revalidatePath(`/builds/${id}`)
+  redirect(`/builds/${id}`)
+}
+
 export async function eliminarBuild(id: string): Promise<ResultadoAccion> {
   await exigirMiembroActivo()
 

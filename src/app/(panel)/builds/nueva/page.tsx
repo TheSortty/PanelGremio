@@ -1,10 +1,19 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { CreadorBuild } from '@/components/builds/CreadorBuild'
+import { exigirMiembroActivo } from '@/lib/auth/sesion'
+import { puedeCrearBuilds } from '@/lib/domain/roles'
 
 export const metadata = { title: 'Nueva build' }
 
-export default function NuevaBuild() {
+export default async function NuevaBuild() {
+  const perfil = await exigirMiembroActivo()
+
+  // Un Invitado puede leer builds pero no crearlas. La política RLS de INSERT
+  // aplica lo mismo; esto solo evita mostrarle un formulario inútil.
+  if (!puedeCrearBuilds(perfil.role)) redirect('/builds')
+
   return (
     <div className="space-y-5">
       <div>

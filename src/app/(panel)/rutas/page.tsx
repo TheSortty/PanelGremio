@@ -1,12 +1,13 @@
 import { MapaEstrategico } from '@/components/mapa/MapaEstrategico'
 import { Aviso } from '@/components/ui/Aviso'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
+import { puedeModerarMapa, puedeUsarMapa } from '@/lib/domain/roles'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata = { title: 'Rutas' }
 
 export default async function Rutas() {
-  await exigirMiembroActivo()
+  const perfil = await exigirMiembroActivo()
   const supabase = await createClient()
 
   const { data: marcadores, error } = await supabase
@@ -19,5 +20,11 @@ export default async function Rutas() {
     return <Aviso tono="error">No pudimos cargar el mapa: {error.message}</Aviso>
   }
 
-  return <MapaEstrategico marcadoresIniciales={marcadores ?? []} />
+  return (
+    <MapaEstrategico
+      marcadoresIniciales={marcadores ?? []}
+      puedeEditar={puedeUsarMapa(perfil.role)}
+      puedeModerar={puedeModerarMapa(perfil.role)}
+    />
+  )
 }

@@ -2,9 +2,12 @@
 
 import { useOptimistic, useState, useTransition } from 'react'
 
+import { limpiarMapa, renombrarMarcador } from '@/actions/mapa'
 import { crearMarcador, eliminarMarcador } from '@/actions/marcadores'
 import { Aviso } from '@/components/ui/Aviso'
+import { Boton } from '@/components/ui/Boton'
 import { Card } from '@/components/ui/Card'
+import { Modal } from '@/components/ui/Modal'
 import type { Tables } from '@/lib/db/database.types'
 import { cn } from '@/lib/utils/cn'
 
@@ -34,11 +37,20 @@ const NOMBRE_POR_TIPO: Record<TipoMarcador, string> = {
 
 export function MapaEstrategico({
   marcadoresIniciales,
+  puedeEditar,
+  puedeModerar,
 }: {
   marcadoresIniciales: Marcador[]
+  /** Miembro o superior. Un Iniciado o un Invitado solo miran. */
+  puedeEditar: boolean
+  /** Oficial o superior: borra marcadores ajenos y limpia el mapa. */
+  puedeModerar: boolean
 }) {
   const [tipo, setTipo] = useState<TipoMarcador>('objective')
   const [error, setError] = useState<string | null>(null)
+  const [editando, setEditando] = useState<Marcador | null>(null)
+  const [etiqueta, setEtiqueta] = useState('')
+  const [confirmandoLimpieza, setConfirmandoLimpieza] = useState(false)
   const [, iniciar] = useTransition()
 
   /**
@@ -57,6 +69,8 @@ export function MapaEstrategico({
   )
 
   function alHacerClic(evento: React.MouseEvent<HTMLDivElement>) {
+    if (!puedeEditar) return
+
     const rect = evento.currentTarget.getBoundingClientRect()
     const x = ((evento.clientX - rect.left) / rect.width) * 100
     const y = ((evento.clientY - rect.top) / rect.height) * 100
@@ -96,16 +110,30 @@ export function MapaEstrategico({
         <div>
           <h1 className="text-xl font-bold">Mapa estratégico</h1>
           <p className="mt-0.5 text-sm text-texto-tenue">
-            Hacé clic para agregar un marcador. Lo ve todo el gremio.
+            {puedeEditar
+              ? 'Hacé clic para agregar un marcador. Lo ve todo el gremio.'
+              : 'Solo lectura: se requiere rol de Miembro para poner marcadores.'}
           </p>
         </div>
 
-        <div
-          className="flex items-center gap-1 rounded-lg bg-superficie-alta p-1"
-          role="radiogroup"
-          aria-label="Tipo de marcador"
-        >
-          {TIPOS.map(({ valor, etiqueta, color }) => (
+        <div className="flex items-center gap-2">
+          {puedeModerar && marcadores.length > 0 && (
+            <Boton
+              variante="secundario"
+              tamano="sm"
+              onClick={() => setConfirmandoLimpieza(true)}
+            >
+              Limpiar mapa
+            </Boton>
+          )}
+
+          {puedeEditar && (
+            <div
+              className="flex items-center gap-1 rounded-lg bg-superficie-alta p-1"
+              role="radiogroup"
+              aria-label="Tipo de marcador"
+            >
+          {TIPOS.map(({ valor, etiqueta: nombreTipo, color }) => (
             <button
               key={valor}
               type="button"
@@ -120,9 +148,11 @@ export function MapaEstrategico({
               )}
             >
               <span className={cn('size-2 rounded-full', color)} />
-              {etiqueta}
+              {nombreTipo}
             </button>
           ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -134,7 +164,10 @@ export function MapaEstrategico({
 
       <div
         onClick={alHacerClic}
-        className="relative aspect-video w-full cursor-crosshair overflow-hidden rounded-lg border border-borde bg-superficie-alta bg-cover bg-center"
+        className={cn(
+          'relative aspect-video w-full overflow-hidden rounded-lg border border-borde bg-superficie-alta bg-cover bg-center',
+          puedeEditar ? 'cursor-crosshair' : 'cursor-default',
+        )}
         style={{
           backgroundImage:
             "url('https://albiononline.com/assets/images/uploads/media/data/26/map_royal_continent.jpg')",
@@ -145,13 +178,21 @@ export function MapaEstrategico({
             key={marcador.id}
             type="button"
             onClick={(e) => {
-              // Sin esto, el clic para borrar burbujea al mapa y crea otro
-              // marcador justo encima del que se acaba de eliminar.
+              // Sin esto, el clic burbujea al mapa y crea otro marcador justo
+              // encima del que se acaba de tocar.
               e.stopPropagation()
-              quitar(marcador.id)
+              if (!puedeEditar) return
+              setEditando(marcador)
+              setEtiqueta(marcador.label ?? '')
             }}
-            title={`Eliminar marcador de ${NOMBRE_POR_TIPO[marcador.type]}`}
-            aria-label={`Eliminar marcador de ${NOMBRE_POR_TIPO[marcador.type]}`}
+            title={
+              marcador.label
+                ? `${marcador.label} (${NOMBRE_POR_TIPO[marcador.type]})`
+                : `Marcador de ${NOMBRE_POR_TIPO[marcador.type]}`
+            }
+            aria-label={
+              marcador.label ?? `Marcador de ${NOMBRE_POR_TIPO[marcador.type]}`
+            }
             style={{ left: `${marcador.x}%`, top: `${marcador.y}%` }}
             className={cn(
               'absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-lg transition-transform hover:scale-125',
@@ -162,9 +203,90 @@ export function MapaEstrategico({
       </div>
 
       <p className="mt-2 text-xs text-texto-tenue">
-        {marcadores.length} marcador{marcadores.length === 1 ? '' : 'es'}. Hacé
-        clic en uno para eliminarlo.
+        {marcadores.length} marcador{marcadores.length === 1 ? '' : 'es'}
+        {puedeEditar && '. Hacé clic en uno para nombrarlo o eliminarlo.'}
       </p>
+
+      {/* Nombrar o eliminar un marcador. La columna `label` existía desde la
+          primera migración pero no había forma de escribirla. */}
+      <Modal
+        abierto={editando !== null}
+        onCerrar={() => setEditando(null)}
+        titulo="Marcador"
+      >
+        <label htmlFor="etiqueta" className="mb-1 block text-xs text-texto-suave">
+          Nombre (opcional)
+        </label>
+        <input
+          id="etiqueta"
+          className="campo"
+          value={etiqueta}
+          onChange={(e) => setEtiqueta(e.target.value)}
+          maxLength={120}
+          placeholder="Portal de salida, punto de reunión…"
+        />
+        <div className="mt-5 flex justify-between gap-2">
+          <Boton
+            variante="peligro"
+            onClick={() => {
+              const m = editando
+              setEditando(null)
+              if (m) quitar(m.id)
+            }}
+          >
+            Eliminar
+          </Boton>
+          <div className="flex gap-2">
+            <Boton variante="secundario" onClick={() => setEditando(null)}>
+              Cancelar
+            </Boton>
+            <Boton
+              onClick={() => {
+                const m = editando
+                setEditando(null)
+                if (!m) return
+                iniciar(async () => {
+                  const r = await renombrarMarcador(m.id, etiqueta)
+                  if (!r.ok) setError(r.error)
+                })
+              }}
+            >
+              Guardar
+            </Boton>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        abierto={confirmandoLimpieza}
+        onCerrar={() => setConfirmandoLimpieza(false)}
+        titulo="Limpiar el mapa"
+      >
+        <p className="text-sm text-texto-suave">
+          Se van a borrar los {marcadores.length} marcadores del gremio. No se
+          puede deshacer, y queda registrado en la auditoría.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Boton
+            variante="secundario"
+            onClick={() => setConfirmandoLimpieza(false)}
+          >
+            Cancelar
+          </Boton>
+          <Boton
+            variante="peligro"
+            onClick={() => {
+              setConfirmandoLimpieza(false)
+              iniciar(async () => {
+                const r = await limpiarMapa()
+                if (!r.ok) setError(r.error)
+              })
+            }}
+          >
+            Borrar todo
+          </Boton>
+        </div>
+      </Modal>
     </Card>
   )
 }

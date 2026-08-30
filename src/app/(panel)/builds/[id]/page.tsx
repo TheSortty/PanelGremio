@@ -7,6 +7,7 @@ import { obtenerBuild } from '@/lib/data/builds'
 import { obtenerDatosDeItems } from '@/lib/data/items'
 import { SLOTS_EQUIPO, SLOTS_CONSUMIBLE } from '@/lib/domain/builds'
 import { resumirBuild } from '@/lib/domain/calculo'
+import { puedeEditarBuild } from '@/lib/domain/roles'
 
 export async function generateMetadata({
   params,
@@ -23,7 +24,7 @@ export default async function DetalleBuild({
 }: {
   params: Promise<{ id: string }>
 }) {
-  await exigirMiembroActivo()
+  const perfil = await exigirMiembroActivo()
   const { id } = await params
 
   const [build, ia] = await Promise.all([obtenerBuild(id), iaDisponible()])
@@ -48,6 +49,7 @@ export default async function DetalleBuild({
       datosItems={datosItems}
       resumen={resumen}
       puedeGenerarGuia={ia}
+      puedeEditar={puedeEditarBuild(perfil.role, build.author?.id, perfil.id)}
     />
   )
 }
