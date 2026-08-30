@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 
 import { VisorBuild } from '@/components/builds/VisorBuild'
 import { iaDisponible } from '@/actions/guia'
+import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { obtenerBuild } from '@/lib/data/builds'
 
 export async function generateMetadata({
@@ -19,6 +20,7 @@ export default async function DetalleBuild({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await exigirMiembroActivo()
   const { id } = await params
 
   const [build, ia] = await Promise.all([obtenerBuild(id), iaDisponible()])

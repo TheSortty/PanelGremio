@@ -1,6 +1,7 @@
 import { TablaMiembros } from '@/components/panel/TablaMiembros'
 import { Card } from '@/components/ui/Card'
 import { Aviso } from '@/components/ui/Aviso'
+import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata = { title: 'Panel' }
@@ -26,6 +27,7 @@ function Estadistica({
 }
 
 export default async function Panel() {
+  await exigirMiembroActivo()
   const supabase = await createClient()
 
   // Se pide a la vista guild_members, donde `online` se calcula a partir de

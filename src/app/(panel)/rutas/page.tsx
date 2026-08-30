@@ -1,10 +1,12 @@
 import { MapaEstrategico } from '@/components/mapa/MapaEstrategico'
 import { Aviso } from '@/components/ui/Aviso'
+import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata = { title: 'Rutas' }
 
 export default async function Rutas() {
+  await exigirMiembroActivo()
   const supabase = await createClient()
 
   const { data: marcadores, error } = await supabase

@@ -4,6 +4,7 @@ import { TarjetaBuild } from '@/components/builds/TarjetaBuild'
 import { Boton } from '@/components/ui/Boton'
 import { Vacio } from '@/components/ui/Vacio'
 import { CATEGORIAS_BUILD } from '@/lib/domain/builds'
+import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { listarBuilds } from '@/lib/data/builds'
 import { cn } from '@/lib/utils/cn'
 
@@ -14,6 +15,12 @@ export default async function Builds({
 }: {
   searchParams: Promise<{ categoria?: string }>
 }) {
+  // El layout ya exige sesión, pero Next renderiza layout y página en
+  // paralelo: sin este guard la consulta puede arrancar antes de que el
+  // redirect del layout resuelva, y estalla con un error de permisos.
+  // obtenerPerfil() está memorizado por petición, así que no cuesta nada.
+  await exigirMiembroActivo()
+
   const { categoria } = await searchParams
 
   // El filtro va en la URL, no en el estado: se puede compartir el enlace de
