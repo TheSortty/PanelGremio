@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "panel-gremio",
+  "name": "panelgremio",
   "main": ".open-next/worker.js",
 
   // Fecha de compatibilidad de workerd. Subirla cambia el comportamiento del
