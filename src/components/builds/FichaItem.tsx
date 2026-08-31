@@ -67,8 +67,18 @@ export function FichaItem({
     )
   }
 
+  /*
+    El envoltorio centra la baldosa sobre la tira de habilidades.
+
+    Con cuatro habilidades —Q, W, E y la pasiva— la tira mide más que los 80 px
+    de la baldosa, así que el envoltorio crece con ella. Siendo un bloque, la
+    baldosa quedaba pegada al borde izquierdo y parecía corrida respecto de sus
+    vecinas: es lo que se ve en el arma primaria, que es la única pieza con las
+    cuatro. Centrando la columna, la baldosa queda sobre el eje de la tira sin
+    importar cuántas habilidades haya.
+  */
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('flex flex-col items-center', className)}>
       <IconoItem
         id={item.id}
         nombre={item.name}

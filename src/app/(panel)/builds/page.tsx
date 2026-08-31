@@ -1,5 +1,8 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 
+
+import { BuscadorBuilds } from '@/components/builds/BuscadorBuilds'
 import { ListaBuilds, type BuildEnLista } from '@/components/builds/ListaBuilds'
 import { Boton } from '@/components/ui/Boton'
 import { IconoEspada, IconoMas } from '@/components/ui/Iconos'
@@ -17,7 +20,7 @@ export const metadata = { title: 'Builds' }
 export default async function Builds({
   searchParams,
 }: {
-  searchParams: Promise<{ categoria?: string }>
+  searchParams: Promise<{ categoria?: string; q?: string }>
 }) {
   // El layout ya exige sesión, pero Next renderiza layout y página en
   // paralelo: sin este guard la consulta puede arrancar antes de que el
@@ -26,7 +29,7 @@ export default async function Builds({
   const perfil = await exigirMiembroActivo()
   const puedeCrear = puedeCrearBuilds(perfil.role)
 
-  const { categoria } = await searchParams
+  const { categoria, q } = await searchParams
 
   // El filtro va en la URL, no en el estado: se puede compartir el enlace de
   // "todas las builds de ZvZ" y el botón atrás funciona.
@@ -34,7 +37,7 @@ export default async function Builds({
     ? categoria
     : undefined
 
-  const builds = await listarBuilds(filtro)
+  const builds = await listarBuilds(filtro, q)
 
   /*
     El poder de ítem sale de la tabla `items`, no del JSON de la build: así un
@@ -61,6 +64,9 @@ export default async function Builds({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Builds</h1>
+        <Suspense fallback={<div className="max-w-sm flex-1" />}>
+          <BuscadorBuilds />
+        </Suspense>
         {puedeCrear && (
           <Link href="/builds/nueva">
             <Boton>
@@ -73,7 +79,7 @@ export default async function Builds({
 
       <div className="flex flex-wrap gap-1.5">
         <Link
-          href="/builds"
+          href={q ? `/builds?q=${encodeURIComponent(q)}` : '/builds'}
           className={cn(
             'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
             !filtro
@@ -86,7 +92,7 @@ export default async function Builds({
         {CATEGORIAS_BUILD.map((c) => (
           <Link
             key={c}
-            href={`/builds?categoria=${encodeURIComponent(c)}`}
+            href={`/builds?categoria=${encodeURIComponent(c)}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
             className={cn(
               'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
               filtro === c
@@ -102,10 +108,20 @@ export default async function Builds({
       {entradas.length === 0 ? (
         <Vacio
           icono={IconoEspada}
-          titulo={filtro ? `Todavía no hay builds de ${filtro}` : 'Todavía no hay builds'}
-          descripcion="Creá la primera y quedará disponible para todo el gremio."
+          titulo={
+            q
+              ? `Ninguna build coincide con "${q}"`
+              : filtro
+                ? `Todavía no hay builds de ${filtro}`
+                : 'Todavía no hay builds'
+          }
+          descripcion={
+            q
+              ? 'Se busca por el título de la build y por el nombre del arma.'
+              : 'Creá la primera y quedará disponible para todo el gremio.'
+          }
           accion={
-            puedeCrear ? (
+            puedeCrear && !q ? (
               <Link href="/builds/nueva">
                 <Boton>
                   <IconoMas className="text-sm" />

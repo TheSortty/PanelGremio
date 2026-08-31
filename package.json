@@ -22,7 +22,9 @@
     "cf:preview": "npm run build && wrangler dev",
     "build:next": "next build",
     "test:e2e": "tsx scripts/e2e-crud.ts",
-    "iconos:verificar": "tsx scripts/verificar-iconos.ts"
+    "iconos:verificar": "tsx scripts/verificar-iconos.ts",
+    "test:barrera": "tsx scripts/e2e-barrera.ts",
+    "test": "npm run test:e2e && npm run test:barrera"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

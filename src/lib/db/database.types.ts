@@ -327,6 +327,57 @@ export type Database = {
         }
         Relationships: []
       }
+      routes: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          destination: string | null
+          id: string
+          name: string
+          notes: string | null
+          origin: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          destination?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          origin: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          destination?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          origin?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spells: {
         Row: {
           id: string

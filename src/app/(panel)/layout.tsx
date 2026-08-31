@@ -6,7 +6,8 @@ import { MenuUsuario } from '@/components/panel/MenuUsuario'
 import { Navegacion, type Enlace } from '@/components/panel/Navegacion'
 import { Blason } from '@/components/ui/Iconos'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
-import { esOficial, puedeGestionarUsuarios } from '@/lib/domain/roles'
+import { contarPendientes } from '@/lib/data/usuarios'
+import { puedeGestionarUsuarios } from '@/lib/domain/roles'
 
 const ENLACES_BASE: Enlace[] = [
   { href: '/panel', etiqueta: 'Panel' },
@@ -30,14 +31,23 @@ export default async function PanelLayout({
   const perfil = await exigirMiembroActivo()
 
   const enlaces = [...ENLACES_BASE]
-  if (esOficial(perfil.role)) {
-    enlaces.push(
-      { href: '/metricas', etiqueta: 'Métricas' },
-      { href: '/registro', etiqueta: 'Registro' },
-    )
-  }
+
+  /*
+    Administración es lo único que se suma según el rol.
+
+    Antes se sumaban además Métricas y Registro. Métricas se sacó entera; el
+    registro de auditoría pasó a ser una pestaña dentro de Administración, que
+    es donde se lo necesita: se entra a ver quién cambió un rol justo después
+    de cambiarlo.
+
+    La insignia con las solicitudes pendientes es la única forma de enterarse
+    de que alguien está esperando: nadie entra a Administración "por las
+    dudas".
+  */
+  let pendientes = 0
   if (puedeGestionarUsuarios(perfil.role)) {
     enlaces.push({ href: '/admin', etiqueta: 'Administración' })
+    pendientes = await contarPendientes()
   }
 
   return (
@@ -59,7 +69,7 @@ export default async function PanelLayout({
               Panel del Gremio
             </span>
           </Link>
-          <Navegacion enlaces={enlaces} />
+          <Navegacion enlaces={enlaces} pendientes={pendientes} />
           <div className="ml-auto">
             <MenuUsuario
               nombre={perfil.name}

@@ -42,7 +42,7 @@ function alMenos(rol: GuildRole | null | undefined, minimo: GuildRole): boolean 
  * solo tres niveles reales: Invitado, Iniciado y Miembro hacían lo mismo.
  */
 
-/** Invitado y superiores: leer builds, mapa, panel. */
+/** Invitado y superiores: leer builds, rutas y panel. */
 export const puedeLeer = (rol: GuildRole | null | undefined) =>
   alMenos(rol, 'Invitado')
 
@@ -50,11 +50,11 @@ export const puedeLeer = (rol: GuildRole | null | undefined) =>
 export const puedeCrearBuilds = (rol: GuildRole | null | undefined) =>
   alMenos(rol, 'Iniciado')
 
-/** Miembro y superiores: poner marcadores en el mapa. */
+/** Miembro y superiores: cargar rutas avalonianas. */
 export const puedeUsarMapa = (rol: GuildRole | null | undefined) =>
   alMenos(rol, 'Miembro')
 
-/** Oficial y superiores: editar builds ajenas, moderar el mapa, ver métricas. */
+/** Oficial y superiores: editar y borrar builds y rutas ajenas. */
 export const esOficial = (rol: GuildRole | null | undefined) =>
   alMenos(rol, 'Oficial')
 
@@ -68,7 +68,6 @@ export const esMaestro = (rol: GuildRole | null | undefined) =>
 
 // Alias por lo que hace, no por el rol que lo habilita.
 export const puedeVerMetricas = esOficial
-export const puedeModerarMapa = esOficial
 export const puedeGestionarUsuarios = esAdmin
 export const puedeTransferirLiderazgo = esMaestro
 
@@ -92,8 +91,8 @@ export const ETIQUETAS_ESTADO: Record<UserStatus, string> = {
 export const CAPACIDAD_DE_ROL: Record<GuildRole, string> = {
   'Maestro del Gremio': 'Manda sobre todo; puede transferir el liderazgo',
   'Mano Derecha': 'Aprueba cuentas, cambia roles y da de baja',
-  Oficial: 'Edita builds ajenas, modera el mapa y ve métricas',
-  Miembro: 'Crea builds y pone marcadores en el mapa',
+  Oficial: 'Edita y borra builds y rutas de cualquiera',
+  Miembro: 'Crea builds y carga rutas avalonianas',
   Iniciado: 'Crea y edita sus propias builds',
   Invitado: 'Solo lectura',
 }

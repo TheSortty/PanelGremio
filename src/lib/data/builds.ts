@@ -50,7 +50,7 @@ function aBuild(fila: FilaCruda): Build {
  * cosas; `consumables` no, que ahí no se muestran. La versión anterior traía
  * siempre la fila completa, guía incluida, para pintar seis iconos.
  */
-export async function listarBuilds(categoria?: string) {
+export async function listarBuilds(categoria?: string, busqueda?: string) {
   const supabase = await createClient()
 
   let consulta = supabase
@@ -60,6 +60,31 @@ export async function listarBuilds(categoria?: string) {
     .limit(200)
 
   if (categoria) consulta = consulta.eq('category', categoria)
+
+  /*
+    La búsqueda mira el título y el nombre del arma.
+
+    El arma vive dentro del JSONB de equipment, y PostgREST sabe navegarlo:
+    `equipment->weapon->>name` se filtra igual que una columna. Comprobado
+    contra la base real antes de escribirlo, porque si la ruta estuviera mal no
+    daría error: devolvería cero filas en silencio, que es la peor forma de
+    fallar para un buscador.
+
+    Se filtra en la base y no en el cliente porque el listado corta en 200
+    filas: filtrar después de traerlas buscaría solo dentro de esas 200.
+
+    El término se escapa. Sin eso, una coma parte la expresión del .or() en dos
+    condiciones y la consulta hace cualquier cosa.
+  */
+  const termino = busqueda?.trim()
+  if (termino) {
+    const limpio = termino.replace(/[(),*]/g, ' ').trim()
+    if (limpio) {
+      consulta = consulta.or(
+        `title.ilike.*${limpio}*,equipment->weapon->>name.ilike.*${limpio}*`,
+      )
+    }
+  }
 
   const { data, error } = await consulta
   if (error) throw new Error(error.message)

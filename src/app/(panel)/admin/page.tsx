@@ -3,7 +3,7 @@ import { Aviso } from '@/components/ui/Aviso'
 import { exigirAdmin } from '@/lib/auth/sesion'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata = { title: 'Administración' }
+export const metadata = { title: 'Usuarios' }
 
 const FILTROS = ['pending', 'active', 'all'] as const
 type Filtro = (typeof FILTROS)[number]
@@ -39,20 +39,11 @@ export default async function Admin({
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold">Administración de usuarios</h1>
-        <p className="mt-0.5 text-sm text-texto-tenue">
-          Aprobá solicitudes y ajustá roles.
-        </p>
-      </div>
-
-      <TablaUsuarios
+    <TablaUsuarios
         usuarios={usuarios ?? []}
         filtroActual={filtro}
         idAdmin={admin.id}
-        rolAdmin={admin.role}
-      />
-    </div>
+      rolAdmin={admin.role}
+    />
   )
 }

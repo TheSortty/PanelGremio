@@ -7,10 +7,8 @@ import type { ComponentType, SVGProps } from 'react'
 import {
   IconoEscudo,
   IconoEspada,
-  IconoGrafico,
   IconoLlave,
   IconoMapa,
-  IconoPergamino,
 } from '@/components/ui/Iconos'
 import { cn } from '@/lib/utils/cn'
 
@@ -27,8 +25,6 @@ const ICONOS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   '/panel': IconoEscudo,
   '/builds': IconoEspada,
   '/rutas': IconoMapa,
-  '/metricas': IconoGrafico,
-  '/registro': IconoPergamino,
   '/admin': IconoLlave,
 }
 
@@ -44,7 +40,14 @@ const ICONOS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
  * antorcha sobre la piedra, en vez de rellenar el botón entero: con seis
  * secciones, seis bloques de color pesaban más que el contenido.
  */
-export function Navegacion({ enlaces }: { enlaces: Enlace[] }) {
+export function Navegacion({
+  enlaces,
+  pendientes = 0,
+}: {
+  enlaces: Enlace[]
+  /** Solicitudes esperando aprobación. Marca Administración. */
+  pendientes?: number
+}) {
   const pathname = usePathname()
 
   return (
@@ -68,10 +71,19 @@ export function Navegacion({ enlaces }: { enlaces: Enlace[] }) {
             )}
           >
             {Icono && <Icono className="text-base" />}
-            {/* En pantallas chicas queda solo el icono: seis etiquetas no
+            {/* En pantallas chicas queda solo el icono: las etiquetas no
                 entran y la barra terminaba con scroll horizontal siempre. */}
             <span className="hidden sm:inline">{etiqueta}</span>
             <span className="sr-only sm:hidden">{etiqueta}</span>
+
+            {href === '/admin' && pendientes > 0 && (
+              <span
+                title={`${pendientes} solicitud${pendientes === 1 ? '' : 'es'} sin resolver`}
+                className="ml-0.5 rounded-full bg-alerta px-1.5 py-0.5 text-[11px] font-bold leading-none tabular-nums text-sobre-acento"
+              >
+                {pendientes}
+              </span>
+            )}
           </Link>
         )
       })}
