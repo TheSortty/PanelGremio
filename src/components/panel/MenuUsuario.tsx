@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 import { BotonSalir } from '@/components/auth/BotonSalir'
@@ -81,6 +82,14 @@ export function MenuUsuario({
             <p className="text-xs text-acento">{rol}</p>
           </div>
           <div className="p-1.5">
+            <Link
+              href="/perfil"
+              onClick={() => setAbierto(false)}
+              className="block rounded-lg px-2.5 py-1.5 text-xs font-medium text-texto-suave transition-colors hover:bg-superficie-alta hover:text-texto"
+              role="menuitem"
+            >
+              Mi perfil
+            </Link>
             <BotonSalir className="[&>button]:w-full [&>button]:justify-start" />
           </div>
         </div>
