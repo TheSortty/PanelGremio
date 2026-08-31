@@ -13,7 +13,7 @@ export function Card({
     <div
       className={cn(
         // .losa lleva el bisel de piedra; ver globals.css
-        'losa p-5',
+        'losa p-6',
         className,
       )}
     >

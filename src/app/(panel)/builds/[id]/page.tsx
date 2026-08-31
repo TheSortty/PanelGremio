@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 
-import { iaDisponible } from '@/actions/guia'
 import { VisorBuild } from '@/components/builds/VisorBuild'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { obtenerBuild } from '@/lib/data/builds'
@@ -27,7 +26,7 @@ export default async function DetalleBuild({
   const perfil = await exigirMiembroActivo()
   const { id } = await params
 
-  const [build, ia] = await Promise.all([obtenerBuild(id), iaDisponible()])
+  const build = await obtenerBuild(id)
 
   // Una build inexistente y una que RLS no deja ver llegan igual como null.
   // Se responde 404 en los dos casos: distinguirlos revelaría qué ids existen.
@@ -48,7 +47,6 @@ export default async function DetalleBuild({
       build={build}
       datosItems={datosItems}
       resumen={resumen}
-      puedeGenerarGuia={ia}
       puedeEditar={puedeEditarBuild(perfil.role, build.author?.id, perfil.id)}
     />
   )

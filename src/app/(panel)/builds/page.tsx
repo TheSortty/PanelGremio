@@ -1,13 +1,15 @@
 import Link from 'next/link'
 
-import { TarjetaBuild } from '@/components/builds/TarjetaBuild'
+import { ListaBuilds, type BuildEnLista } from '@/components/builds/ListaBuilds'
 import { Boton } from '@/components/ui/Boton'
 import { IconoEspada, IconoMas } from '@/components/ui/Iconos'
 import { Vacio } from '@/components/ui/Vacio'
-import { CATEGORIAS_BUILD } from '@/lib/domain/builds'
+import { CATEGORIAS_BUILD, SLOTS_EQUIPO } from '@/lib/domain/builds'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { puedeCrearBuilds } from '@/lib/domain/roles'
 import { listarBuilds } from '@/lib/data/builds'
+import { obtenerDatosDeItems } from '@/lib/data/items'
+import { resumirBuild } from '@/lib/domain/calculo'
 import { cn } from '@/lib/utils/cn'
 
 export const metadata = { title: 'Builds' }
@@ -34,10 +36,31 @@ export default async function Builds({
 
   const builds = await listarBuilds(filtro)
 
+  /*
+    El poder de ítem sale de la tabla `items`, no del JSON de la build: así un
+    rebalanceo del juego se refleja en las builds ya guardadas.
+
+    Se pide de una sola vez para todo el listado y no una consulta por build:
+    son seis piezas cada una, y con veinte builds ya serían ciento veinte
+    viajes. obtenerDatosDeItems agrupa en tandas de 200, así que en la práctica
+    son dos o tres consultas.
+  */
+  const idsItems = builds.flatMap((b) =>
+    SLOTS_EQUIPO.map((s) => b.equipment[s]?.id).filter(
+      (x): x is string => Boolean(x),
+    ),
+  )
+  const datosItems = await obtenerDatosDeItems(idsItems)
+
+  const entradas: BuildEnLista[] = builds.map((build) => ({
+    build,
+    poderPromedio: resumirBuild(build, datosItems).poderPromedio,
+  }))
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">Builds</h1>
+        <h1 className="text-2xl font-bold">Builds</h1>
         {puedeCrear && (
           <Link href="/builds/nueva">
             <Boton>
@@ -52,7 +75,7 @@ export default async function Builds({
         <Link
           href="/builds"
           className={cn(
-            'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
+            'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
             !filtro
               ? 'bg-acento text-sobre-acento'
               : 'bg-superficie-alta text-texto-suave hover:text-texto',
@@ -65,7 +88,7 @@ export default async function Builds({
             key={c}
             href={`/builds?categoria=${encodeURIComponent(c)}`}
             className={cn(
-              'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
+              'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
               filtro === c
                 ? 'bg-acento text-sobre-acento'
                 : 'bg-superficie-alta text-texto-suave hover:text-texto',
@@ -76,11 +99,11 @@ export default async function Builds({
         ))}
       </div>
 
-      {builds.length === 0 ? (
+      {entradas.length === 0 ? (
         <Vacio
+          icono={IconoEspada}
           titulo={filtro ? `Todavía no hay builds de ${filtro}` : 'Todavía no hay builds'}
           descripcion="Creá la primera y quedará disponible para todo el gremio."
-          icono={IconoEspada}
           accion={
             puedeCrear ? (
               <Link href="/builds/nueva">
@@ -93,11 +116,7 @@ export default async function Builds({
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {builds.map((build) => (
-            <TarjetaBuild key={build.id} build={build} />
-          ))}
-        </div>
+        <ListaBuilds entradas={entradas} />
       )}
     </div>
   )

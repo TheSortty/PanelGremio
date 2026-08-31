@@ -65,6 +65,43 @@
   --font-titulo: var(--fuente-titulo), Georgia, 'Times New Roman', serif;
   --font-cuerpo: var(--fuente-cuerpo), ui-sans-serif, system-ui, sans-serif;
 
+  /*
+    ---------------------------------------------------------------------------
+    ESCALA TIPOGRÁFICA
+
+    Todo el panel estaba escrito con text-xs y text-sm, o sea 12 y 14 px. En un
+    monitor grande eso obliga a acercarse a la pantalla, y sobra espacio a los
+    costados mientras el texto se apretuja.
+
+    En vez de tocar los tamaños archivo por archivo se redefine la escala de
+    Tailwind acá: cada peldaño sube alrededor de un 8 %, así que `text-sm` pasa
+    de 14 a 15 px y `text-xs` de 12 a 13 px sin tocar una sola clase. La
+    proporción entre peldaños se mantiene, que es lo que hace que una escala se
+    vea deliberada y no arreglada a mano.
+
+    Barlow es una grotesca ligeramente estrecha: al mismo tamaño en píxeles se
+    lee más chica que una neutra, así que necesita este empujón más que otras.
+
+    Las alturas de línea suben con ella; si no, el texto más grande queda
+    amontonado y se pierde lo que se ganó.
+  */
+  --text-xs: 0.8125rem; /* 13 */
+  --text-xs--line-height: 1.15rem;
+  --text-sm: 0.9375rem; /* 15 */
+  --text-sm--line-height: 1.4rem;
+  --text-base: 1.0625rem; /* 17 */
+  --text-base--line-height: 1.6rem;
+  --text-lg: 1.1875rem; /* 19 */
+  --text-lg--line-height: 1.7rem;
+  --text-xl: 1.375rem; /* 22 */
+  --text-xl--line-height: 1.85rem;
+  --text-2xl: 1.625rem; /* 26 */
+  --text-2xl--line-height: 2.1rem;
+  --text-3xl: 2.125rem; /* 34 */
+  --text-3xl--line-height: 2.5rem;
+  --text-4xl: 2.625rem; /* 42 */
+  --text-4xl--line-height: 3rem;
+
   --radius-panel: 0.625rem;
 }
 
@@ -168,8 +205,8 @@
     border-radius: 0.5rem;
     border: 1px solid var(--color-borde);
     background-color: oklch(0.13 0.012 62);
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.6rem 0.85rem;
+    font-size: var(--text-sm);
     color: var(--color-texto);
     transition:
       border-color 150ms ease,
@@ -222,7 +259,7 @@
     font-family: var(--font-titulo);
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-texto-tenue);
   }
@@ -236,8 +273,8 @@
   replace de \n por <br /> que ni renderizaba markdown ni era seguro.
 */
 .markdown {
-  font-size: 0.875rem;
-  line-height: 1.7;
+  font-size: var(--text-sm);
+  line-height: 1.75;
   color: var(--color-texto-suave);
 }
 

@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 // El autor viene por la relación de la FK; se piden solo id y nombre para no
 // exponer el correo ni el estado del resto de los miembros.
 const SELECCION = `
-  id, title, category, description, ai_guide, created_at,
+  id, title, category, description, guide, created_at,
   author:profiles!builds_author_id_fkey ( id, name )
 ` as const
 
@@ -20,7 +20,7 @@ type FilaCruda = {
   title: string
   category: string
   description: string | null
-  ai_guide: string | null
+  guide: string | null
   created_at: string
   equipment: unknown
   consumables: unknown
@@ -34,7 +34,7 @@ function aBuild(fila: FilaCruda): Build {
     title: fila.title,
     category: fila.category,
     description: fila.description,
-    ai_guide: fila.ai_guide,
+    guide: fila.guide,
     created_at: fila.created_at,
     author: fila.author,
     equipment: parsearEquipo(fila.equipment),
@@ -46,16 +46,16 @@ function aBuild(fila: FilaCruda): Build {
 /**
  * Listado de builds.
  *
- * `equipment` se trae para poder dibujar los iconos en las tarjetas, pero
- * `abilities` no: en el listado no se muestran y son la parte más pesada del
- * JSON. La versión anterior traía siempre las filas completas.
+ * Trae `equipment` y `abilities` porque la vista de cuadrícula dibuja las dos
+ * cosas; `consumables` no, que ahí no se muestran. La versión anterior traía
+ * siempre la fila completa, guía incluida, para pintar seis iconos.
  */
 export async function listarBuilds(categoria?: string) {
   const supabase = await createClient()
 
   let consulta = supabase
     .from('builds')
-    .select(`${SELECCION}, equipment`)
+    .select(`${SELECCION}, equipment, abilities`)
     .order('created_at', { ascending: false })
     .limit(200)
 
@@ -65,7 +65,7 @@ export async function listarBuilds(categoria?: string) {
   if (error) throw new Error(error.message)
 
   return (data as unknown as FilaCruda[]).map((fila) =>
-    aBuild({ ...fila, consumables: {}, abilities: {} }),
+    aBuild({ ...fila, consumables: {} }),
   )
 }
 

@@ -190,7 +190,7 @@ export type Build = {
   equipment: Equipo
   consumables: Consumibles
   abilities: Habilidades
-  ai_guide: string | null
+  guide: string | null
   created_at: string
   author: { id: string; name: string } | null
 }

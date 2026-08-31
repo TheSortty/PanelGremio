@@ -101,9 +101,11 @@ export async function actualizarBuild(
         equipment,
         consumables,
         abilities,
-        // La guía cacheada describe el equipamiento viejo: al cambiarlo se
-        // invalida en vez de dejar un texto que ya no corresponde.
-        ai_guide: null,
+        // La guía NO se toca. Cuando la escribía un modelo se borraba al
+        // cambiar el equipamiento, porque describía piezas que ya no estaban.
+        // Una guía escrita por una persona es al revés: es lo más caro de
+        // rehacer, y quien edita el equipamiento sabe si además hay que
+        // corregir el texto.
       },
       { count: 'exact' },
     )

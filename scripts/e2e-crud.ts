@@ -99,6 +99,22 @@ async function main() {
   const { data: filtrada } = await s.from('builds').select('id').eq('category', 'ZvZ').limit(100)
   check('LIST filtrada por categoria', (filtrada?.length ?? 0) > 0)
 
+  // La guía la escribe una persona y va en la misma fila que la build, así que
+  // la cubre la política de UPDATE. Se comprueba que se guarde y que vuelva.
+  const texto = ['## Rotación', '1. Q', '2. W'].join(String.fromCharCode(10))
+  const { count: cGuia, error: eGuia } = await s
+    .from('builds')
+    .update({ guide: texto }, { count: 'exact' })
+    .eq('id', buildId!)
+  check('UPDATE guía escrita', !eGuia && cGuia === 1, `${eGuia?.message ?? ''} count=${cGuia}`)
+
+  const { data: conGuia } = await s
+    .from('builds')
+    .select('guide')
+    .eq('id', buildId!)
+    .single()
+  check('la guía vuelve tal cual', conGuia?.guide === texto, JSON.stringify(conGuia?.guide))
+
   const { count: cDel, error: eD } = await s
     .from('builds')
     .delete({ count: 'exact' })

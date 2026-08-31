@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { CacheDeIconos } from '@/components/panel/CacheDeIconos'
 import { Heartbeat } from '@/components/panel/Heartbeat'
 import { MenuUsuario } from '@/components/panel/MenuUsuario'
 import { Navegacion, type Enlace } from '@/components/panel/Navegacion'
@@ -42,11 +43,12 @@ export default async function PanelLayout({
   return (
     <div className="min-h-screen">
       <Heartbeat />
+      <CacheDeIconos />
 
       {/* La cabecera es la puerta del keep: borde de oro abajo, piedra
           translúcida y el blasón del gremio a la izquierda. */}
       <header className="sticky top-0 z-40 border-b border-borde-suave bg-fondo/85 shadow-[0_1px_0_oklch(0.78_0.135_80/0.12)] backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:gap-5 sm:px-8">
           <Link
             href="/panel"
             className="flex shrink-0 items-center gap-2"
@@ -68,7 +70,7 @@ export default async function PanelLayout({
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8">{children}</main>
     </div>
   )
 }

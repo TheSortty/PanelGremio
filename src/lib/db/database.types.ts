@@ -123,39 +123,39 @@ export type Database = {
       builds: {
         Row: {
           abilities: Json
-          ai_guide: string | null
           author_id: string
           category: string
           consumables: Json
           created_at: string
           description: string | null
           equipment: Json
+          guide: string | null
           id: string
           title: string
           updated_at: string
         }
         Insert: {
           abilities?: Json
-          ai_guide?: string | null
           author_id: string
           category: string
           consumables?: Json
           created_at?: string
           description?: string | null
           equipment?: Json
+          guide?: string | null
           id?: string
           title: string
           updated_at?: string
         }
         Update: {
           abilities?: Json
-          ai_guide?: string | null
           author_id?: string
           category?: string
           consumables?: Json
           created_at?: string
           description?: string | null
           equipment?: Json
+          guide?: string | null
           id?: string
           title?: string
           updated_at?: string

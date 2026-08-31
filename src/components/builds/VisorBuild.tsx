@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 import { AccionesBuild } from '@/components/builds/AccionesBuild'
-import { GuiaIA } from '@/components/builds/GuiaIA'
-import { IconoHechizo, IconoItem } from '@/components/builds/Icono'
+import { FichaItem } from '@/components/builds/FichaItem'
+import { GuiaBuild } from '@/components/builds/GuiaBuild'
 import { ListaStats } from '@/components/builds/ListaStats'
 import { Aviso } from '@/components/ui/Aviso'
 import { Card, CardTitulo } from '@/components/ui/Card'
@@ -10,6 +10,7 @@ import { Etiqueta } from '@/components/ui/Etiqueta'
 import type { Encantamiento } from '@/lib/domain/albion'
 import {
   NOMBRES_SLOT,
+  SLOTS_CONSUMIBLE,
   SLOTS_EQUIPO,
   claveHabilidad,
   type Build,
@@ -24,6 +25,24 @@ import {
   type ResumenBuild,
 } from '@/lib/domain/calculo'
 import { fechaCorta } from '@/lib/utils/formato'
+
+function IconoVolver() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="1em"
+      height="1em"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m15 19-7-7 7-7" />
+    </svg>
+  )
+}
 
 const ORDEN_SLOTS: SpellSlot[] = ['Q', 'W', 'E', 'Passive']
 
@@ -42,62 +61,32 @@ function Pieza({
   const poder = datos ? poderConEncantamiento(datos, ench) : null
 
   return (
-    <div className="rounded-lg border border-borde-suave bg-fondo p-3">
-      <div className="flex items-start gap-3">
-        <div className="relative shrink-0">
-          <div className="flex size-16 items-center justify-center rounded-lg border border-borde bg-superficie">
-            {item ? (
-              <IconoItem
-                id={item.id}
-                nombre={item.name}
-                encantamiento={ench}
-                tamano="chico"
-                className="size-14 rounded"
-              />
-            ) : (
-              <span className="px-1 text-center text-[10px] uppercase leading-tight text-texto-tenue">
-                {NOMBRES_SLOT[slot]}
-              </span>
-            )}
-          </div>
-          {ench > 0 && (
-            <span className="absolute -right-1 -top-1 rounded bg-acento px-1 text-[10px] font-bold text-sobre-acento">
-              .{ench}
-            </span>
-          )}
-        </div>
+    <div className="rounded-lg border border-borde-suave bg-fondo p-4">
+      <div className="flex items-start gap-4">
+        {/* Misma ficha que usa el listado: tier en romanos, rombos del
+            encantamiento y habilidades colgando abajo. */}
+        <FichaItem
+          item={item}
+          habilidades={habilidades}
+          tamano="lg"
+          vacia={NOMBRES_SLOT[slot]}
+          className="shrink-0"
+        />
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] uppercase tracking-wide text-texto-tenue">
-            {NOMBRES_SLOT[slot]}
-          </p>
-          <p className="truncate text-sm font-medium">
+          <p className="grabado">{NOMBRES_SLOT[slot]}</p>
+          <p className="mt-0.5 truncate font-medium">
             {item?.name ?? 'Sin asignar'}
           </p>
-          {(datos?.tier != null || poder != null) && (
-            <p className="text-xs text-texto-tenue">
-              {datos?.tier != null && `T${datos.tier}`}
-              {datos?.tier != null && poder != null && ' · '}
-              {poder != null && `${poder} poder`}
+          {poder != null && (
+            <p className="mt-0.5 text-sm text-texto-tenue">
+              <span className="tabular-nums text-texto-suave">{poder}</span> de
+              poder
             </p>
           )}
-
-          {habilidades.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
-              {habilidades.map((h) => (
-                <IconoHechizo
-                  key={h.id}
-                  id={h.id}
-                  nombre={h.name}
-                  className="size-7 rounded border border-borde bg-superficie"
-                />
-              ))}
-            </div>
-          )}
+          {datos && <ListaStats stats={datos.stats} />}
         </div>
       </div>
-
-      {datos && <ListaStats stats={datos.stats} />}
     </div>
   )
 }
@@ -106,13 +95,11 @@ export function VisorBuild({
   build,
   datosItems,
   resumen,
-  puedeGenerarGuia,
   puedeEditar,
 }: {
   build: Build
   datosItems: Map<string, DatosItem>
   resumen: ResumenBuild
-  puedeGenerarGuia: boolean
   puedeEditar: boolean
 }) {
   /**
@@ -134,23 +121,14 @@ export function VisorBuild({
         href="/builds"
         className="inline-flex items-center gap-1.5 text-sm text-texto-suave transition-colors hover:text-texto"
       >
-        <svg
-          className="size-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="m15 19-7-7 7-7" />
-        </svg>
+        <IconoVolver />
         Volver a builds
       </Link>
 
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold">{build.title}</h1>
+            <h1 className="text-2xl font-bold">{build.title}</h1>
             <p className="mt-1 text-sm text-texto-tenue">
               por {build.author?.name ?? 'autor desconocido'} ·{' '}
               {fechaCorta(build.created_at)}
@@ -172,7 +150,7 @@ export function VisorBuild({
 
         <div className="mt-4 flex flex-wrap gap-4 border-t border-borde-suave pt-4">
           <div>
-            <p className="text-xs text-texto-tenue">Poder de ítem promedio</p>
+            <p className="grabado">Poder de ítem promedio</p>
             <p className="text-2xl font-bold tabular-nums">
               {resumen.poderPromedio ?? '—'}
             </p>
@@ -183,7 +161,7 @@ export function VisorBuild({
 
           {resumen.tierMinimo !== null && (
             <div>
-              <p className="text-xs text-texto-tenue">Tier</p>
+              <p className="grabado">Tier</p>
               <p className="text-2xl font-bold tabular-nums">
                 {resumen.tierMinimo === resumen.tierMaximo
                   ? `T${resumen.tierMinimo}`
@@ -209,7 +187,7 @@ export function VisorBuild({
         <div className="space-y-5 lg:col-span-2">
           <Card>
             <CardTitulo>Equipamiento</CardTitulo>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {SLOTS_EQUIPO.map((slot) => {
                 const item = build.equipment[slot]
                 return (
@@ -233,25 +211,22 @@ export function VisorBuild({
           <Card>
             <CardTitulo>Consumibles</CardTitulo>
             <div className="grid gap-3 sm:grid-cols-2">
-              {(['potion', 'food'] as const).map((slot) => {
+              {SLOTS_CONSUMIBLE.map((slot) => {
                 const item = build.consumables[slot]
                 return (
-                  <div key={slot} className="flex items-center gap-3">
-                    <div className="flex size-14 shrink-0 items-center justify-center rounded-lg border border-borde bg-fondo">
-                      {item && (
-                        <IconoItem
-                          id={item.id}
-                          nombre={item.name}
-                          tamano="mini"
-                          className="size-12 rounded"
-                        />
-                      )}
-                    </div>
+                  <div key={slot} className="flex items-center gap-4">
+                    {/* La misma ficha que el equipamiento: antes era un cuadro
+                        aparte que, con el slot vacío, quedaba como una caja
+                        negra sin explicación. */}
+                    <FichaItem
+                      item={item}
+                      tamano="md"
+                      vacia={NOMBRES_SLOT[slot]}
+                      className="shrink-0"
+                    />
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-texto-tenue">
-                        {NOMBRES_SLOT[slot]}
-                      </p>
-                      <p className="truncate text-sm">
+                      <p className="grabado">{NOMBRES_SLOT[slot]}</p>
+                      <p className="mt-0.5 truncate">
                         {item?.name ?? 'Sin asignar'}
                       </p>
                     </div>
@@ -262,10 +237,10 @@ export function VisorBuild({
           </Card>
         </div>
 
-        <GuiaIA
+        <GuiaBuild
           buildId={build.id}
-          guiaInicial={build.ai_guide}
-          habilitado={puedeGenerarGuia}
+          guiaInicial={build.guide}
+          puedeEditar={puedeEditar}
         />
       </div>
     </div>
