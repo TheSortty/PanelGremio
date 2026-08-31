@@ -5,13 +5,18 @@ import { cn } from '@/lib/utils/cn'
 type Variante = 'primario' | 'secundario' | 'peligro' | 'fantasma'
 type Tamano = 'sm' | 'md'
 
+/*
+  El acento es oro de antorcha, no índigo: encima va texto oscuro, no blanco.
+  Oro con blanco encima queda por debajo de 3:1 de contraste y se vuelve ilegible
+  al sol o en una pantalla mala.
+*/
 const VARIANTES: Record<Variante, string> = {
   primario:
-    'bg-acento text-white hover:bg-acento-fuerte disabled:hover:bg-acento',
+    'bg-acento text-sobre-acento hover:bg-acento-fuerte disabled:hover:bg-acento',
   secundario:
-    'bg-superficie-alta text-texto hover:bg-borde disabled:hover:bg-superficie-alta',
+    'border border-borde bg-superficie-alta text-texto hover:border-acento/50 hover:bg-borde disabled:hover:border-borde disabled:hover:bg-superficie-alta',
   peligro:
-    'bg-peligro-fondo text-peligro hover:bg-peligro hover:text-white disabled:hover:bg-peligro-fondo',
+    'bg-peligro-fondo text-peligro hover:bg-peligro hover:text-texto disabled:hover:bg-peligro-fondo disabled:hover:text-peligro',
   fantasma: 'text-texto-suave hover:bg-superficie-alta hover:text-texto',
 }
 

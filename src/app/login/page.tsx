@@ -1,6 +1,7 @@
 import { BotonDiscord } from '@/components/auth/BotonDiscord'
 import { BotonSteam } from '@/components/auth/BotonSteam'
 import { FormularioAcceso } from '@/components/auth/FormularioAcceso'
+import { Blason } from '@/components/ui/Iconos'
 
 export const metadata = { title: 'Acceso' }
 
@@ -22,13 +23,18 @@ export default async function Login({
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <header className="mb-7 text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Panel del Gremio</h1>
-          <p className="mt-1 text-sm text-texto-tenue">
+          {/* El blasón es lo primero que se ve del gremio: va grande, en oro,
+              y con el halo de la antorcha detrás. */}
+          <Blason className="mx-auto text-5xl text-acento drop-shadow-[0_0_18px_oklch(0.78_0.135_80/0.35)]" />
+          <h1 className="mt-3 text-2xl font-semibold uppercase tracking-[0.2em]">
+            Panel del Gremio
+          </h1>
+          <p className="mt-1.5 text-sm text-texto-tenue">
             Se requiere autorización para continuar.
           </p>
         </header>
 
-        <div className="rounded-panel border border-borde-suave bg-superficie p-6 shadow-lg">
+        <div className="losa p-6">
           <div className="space-y-2.5">
             <BotonDiscord redirigirA={destino} />
             <BotonSteam />

@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/Card'
+import { IconoPergamino } from '@/components/ui/Iconos'
 import { Vacio } from '@/components/ui/Vacio'
 import { exigirOficial } from '@/lib/auth/sesion'
 import { createClient } from '@/lib/supabase/server'
@@ -6,10 +7,24 @@ import { fechaHora } from '@/lib/utils/formato'
 
 export const metadata = { title: 'Registro' }
 
+/**
+ * Las cinco acciones que la base registra hoy.
+ *
+ * Faltaban dos: `map_cleared` y `leadership_transferred`, que se agregaron con
+ * la jerarquía de roles y el mapa moderable pero nunca llegaron a esta tabla.
+ * Se mostraban con el identificador crudo, que es justo lo que un registro de
+ * auditoría no tiene que hacer: lo lee alguien que quiere entender qué pasó,
+ * no el nombre interno de la función.
+ *
+ * El `?? registro.action` de abajo es la red: si mañana se agrega una acción y
+ * nadie toca este archivo, se ve fea pero se ve.
+ */
 const ACCIONES: Record<string, string> = {
   user_role_changed: 'Cambió un rol',
   user_status_changed: 'Cambió un estado',
   user_deleted: 'Eliminó un usuario',
+  map_cleared: 'Limpió el mapa',
+  leadership_transferred: 'Transfirió el liderazgo',
 }
 
 function detallesLegibles(detalles: unknown): string {
@@ -46,6 +61,7 @@ export default async function Registro() {
       <Card>
         {!registros || registros.length === 0 ? (
           <Vacio
+            icono={IconoPergamino}
             titulo="Sin actividad registrada"
             descripcion="Acá aparecen las aprobaciones, cambios de rol y bajas de usuarios."
           />
@@ -57,7 +73,7 @@ export default async function Registro() {
                   {['Fecha', 'Autor', 'Acción', 'Detalles'].map((h) => (
                     <th
                       key={h}
-                      className="pb-2 pr-4 text-xs font-semibold uppercase tracking-wider text-texto-tenue"
+                      className="grabado pb-2 pr-4 text-left"
                     >
                       {h}
                     </th>

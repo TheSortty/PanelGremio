@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { TarjetaBuild } from '@/components/builds/TarjetaBuild'
 import { Boton } from '@/components/ui/Boton'
+import { IconoEspada, IconoMas } from '@/components/ui/Iconos'
 import { Vacio } from '@/components/ui/Vacio'
 import { CATEGORIAS_BUILD } from '@/lib/domain/builds'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
@@ -39,7 +40,10 @@ export default async function Builds({
         <h1 className="text-xl font-bold">Builds</h1>
         {puedeCrear && (
           <Link href="/builds/nueva">
-            <Boton>Crear build</Boton>
+            <Boton>
+              <IconoMas className="text-sm" />
+              Crear build
+            </Boton>
           </Link>
         )}
       </div>
@@ -50,7 +54,7 @@ export default async function Builds({
           className={cn(
             'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
             !filtro
-              ? 'bg-acento text-white'
+              ? 'bg-acento text-sobre-acento'
               : 'bg-superficie-alta text-texto-suave hover:text-texto',
           )}
         >
@@ -63,7 +67,7 @@ export default async function Builds({
             className={cn(
               'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
               filtro === c
-                ? 'bg-acento text-white'
+                ? 'bg-acento text-sobre-acento'
                 : 'bg-superficie-alta text-texto-suave hover:text-texto',
             )}
           >
@@ -76,10 +80,14 @@ export default async function Builds({
         <Vacio
           titulo={filtro ? `Todavía no hay builds de ${filtro}` : 'Todavía no hay builds'}
           descripcion="Creá la primera y quedará disponible para todo el gremio."
+          icono={IconoEspada}
           accion={
             puedeCrear ? (
               <Link href="/builds/nueva">
-                <Boton>Crear build</Boton>
+                <Boton>
+                  <IconoMas className="text-sm" />
+                  Crear build
+                </Boton>
               </Link>
             ) : undefined
           }

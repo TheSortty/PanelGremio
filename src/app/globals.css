@@ -7,39 +7,65 @@
   en el navegador en cada carga: sin purge, sin tipos, y con un aviso explícito
   de la propia documentación de que no es para producción. Además definía un
   tema de `typography` que nunca se aplicaba, porque el plugin no estaba.
+
+  ---------------------------------------------------------------------------
+  LA PALETA
+
+  El panel es de un gremio de Albion: keeps de piedra, antorchas, hierro y
+  pergamino. La primera migración conservó el gris azulado del prototipo
+  (gray-900 + indigo-500), que es el gris de cualquier panel de control y no
+  dice nada del juego.
+
+  Acá el eje es cálido: todos los grises tienen matiz de piedra (hue ~62) en
+  vez de matiz azul, y el acento pasa de índigo a oro de antorcha. Es el mismo
+  cambio que separa un sótano de una mazmorra iluminada.
+
+  Los colores están en oklch porque es perceptualmente uniforme: subir el
+  primer número aclara lo mismo en el oro que en el rojo, cosa que con hsl no
+  pasa y obliga a corregir a ojo cada variante.
 */
 
 @theme {
-  /* Superficies, de la más profunda a la más elevada */
-  --color-fondo: oklch(0.19 0.015 265);
-  --color-superficie: oklch(0.24 0.018 265);
-  --color-superficie-alta: oklch(0.29 0.02 265);
-  --color-borde: oklch(0.35 0.02 265);
-  --color-borde-suave: oklch(0.3 0.018 265);
+  /* Piedra, de la más profunda a la más elevada */
+  --color-fondo: oklch(0.16 0.012 62);
+  --color-superficie: oklch(0.21 0.014 62);
+  --color-superficie-alta: oklch(0.26 0.016 62);
+  --color-borde: oklch(0.34 0.021 62);
+  --color-borde-suave: oklch(0.28 0.017 62);
 
-  /* Texto */
-  --color-texto: oklch(0.93 0.01 265);
-  --color-texto-suave: oklch(0.72 0.02 265);
-  --color-texto-tenue: oklch(0.58 0.02 265);
+  /* Pergamino */
+  --color-texto: oklch(0.93 0.017 82);
+  --color-texto-suave: oklch(0.76 0.021 80);
+  --color-texto-tenue: oklch(0.61 0.023 78);
 
-  /* Acento: el índigo del diseño original, en oklch para que las variantes
-     mantengan el mismo brillo percibido */
-  --color-acento: oklch(0.62 0.19 274);
-  --color-acento-fuerte: oklch(0.55 0.2 274);
-  --color-acento-suave: oklch(0.35 0.09 274);
+  /* Oro de antorcha. Es la única fuente de luz de la interfaz. */
+  --color-acento: oklch(0.78 0.135 80);
+  --color-acento-fuerte: oklch(0.7 0.145 74);
+  --color-acento-suave: oklch(0.36 0.07 72);
+  /* Texto sobre el oro: la piedra profunda, no blanco. */
+  --color-sobre-acento: oklch(0.18 0.02 62);
 
-  /* Estados */
-  --color-exito: oklch(0.7 0.16 152);
-  --color-exito-fondo: oklch(0.33 0.08 152);
-  --color-alerta: oklch(0.78 0.15 85);
-  --color-alerta-fondo: oklch(0.36 0.08 85);
-  --color-peligro: oklch(0.68 0.19 25);
-  --color-peligro-fondo: oklch(0.34 0.1 25);
+  /*
+    Estados. Separados del oro por matiz y no solo por brillo, porque el oro ya
+    ocupa la franja ámbar: verdín para lo que salió bien, brasa para lo que
+    pide atención, sangre para lo destructivo.
+  */
+  --color-exito: oklch(0.74 0.12 158);
+  --color-exito-fondo: oklch(0.32 0.07 158);
+  --color-alerta: oklch(0.74 0.155 52);
+  --color-alerta-fondo: oklch(0.33 0.09 52);
+  --color-peligro: oklch(0.65 0.19 25);
+  --color-peligro-fondo: oklch(0.32 0.11 25);
 
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /*
+    Las variables --fuente-* las inyecta next/font en <html>. Se envuelven acá
+    con su pila de reserva para que Tailwind genere las utilidades font-titulo
+    y font-cuerpo: sin este paso el nombre existe pero la clase no.
+  */
+  --font-titulo: var(--fuente-titulo), Georgia, 'Times New Roman', serif;
+  --font-cuerpo: var(--fuente-cuerpo), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-panel: 0.75rem;
+  --radius-panel: 0.625rem;
 }
 
 @layer base {
@@ -50,8 +76,69 @@
   body {
     background-color: var(--color-fondo);
     color: var(--color-texto);
-    font-family: var(--font-sans);
+    font-family: var(--font-cuerpo);
     -webkit-font-smoothing: antialiased;
+    /* Sin esto la antorcha de ::before deja una franja clara al hacer scroll. */
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /*
+    La antorcha.
+
+    Un halo cálido anclado arriba, como si la luz entrara por encima de la mesa
+    de guerra, más una capa de grano que le saca a los planos el aspecto de
+    plástico. El grano es un feTurbulence embebido: pesa unos 300 bytes y no
+    agrega un pedido más.
+
+    Va en un pseudo-elemento fijo y con pointer-events: none para que no
+    intercepte clics ni se mueva con el scroll.
+  */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        60rem 32rem at 50% -8rem,
+        oklch(0.78 0.135 80 / 0.11),
+        transparent 70%
+      ),
+      radial-gradient(
+        90rem 60rem at 50% 120%,
+        oklch(0.16 0.03 40 / 0.55),
+        transparent 65%
+      );
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+  }
+
+  /* Todo el contenido va por encima de la antorcha y del grano. */
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /*
+    Los títulos llevan la tipografía de exhibición. Grenze es una romana con
+    remates angulosos: tiene el aire grabado de un cartel de taberna sin caer
+    en la gótica ilegible que suele acompañar a lo medieval.
+  */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-titulo);
+    letter-spacing: 0.01em;
   }
 
   /* Un foco visible y consistente. El original dependía del contorno por
@@ -63,6 +150,13 @@
 
   ::selection {
     background-color: var(--color-acento-suave);
+    color: var(--color-texto);
+  }
+
+  /* Barras de scroll en piedra, no en el gris del sistema. */
+  * {
+    scrollbar-color: var(--color-borde) transparent;
+    scrollbar-width: thin;
   }
 }
 
@@ -73,11 +167,13 @@
     width: 100%;
     border-radius: 0.5rem;
     border: 1px solid var(--color-borde);
-    background-color: var(--color-fondo);
+    background-color: oklch(0.13 0.012 62);
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     color: var(--color-texto);
-    transition: border-color 150ms ease;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
   }
 
   .campo::placeholder {
@@ -86,12 +182,49 @@
 
   .campo:focus {
     border-color: var(--color-acento);
+    /* El resplandor del oro hace de indicador de foco sin mover el layout. */
+    box-shadow: 0 0 0 3px oklch(0.78 0.135 80 / 0.15);
     outline: none;
   }
 
   .campo:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  /*
+    Losa.
+
+    Es la superficie base de todo el panel. El bisel es la única licencia
+    decorativa: una línea clarísima arriba y una oscura abajo, que es como se
+    ve una piedra tallada con la luz viniendo de arriba. Sin eso las tarjetas
+    quedan como rectángulos planos de un dashboard cualquiera.
+  */
+  .losa {
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-panel);
+    background-image: linear-gradient(
+      180deg,
+      var(--color-superficie),
+      oklch(0.19 0.013 62)
+    );
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.05),
+      inset 0 -1px 0 oklch(0 0 0 / 0.25),
+      0 1px 2px oklch(0 0 0 / 0.4);
+  }
+
+  /*
+    Rótulo grabado. Para los encabezados de columna y las etiquetas de sección:
+    versalitas espaciadas en oro apagado, como una inscripción.
+  */
+  .grabado {
+    font-family: var(--font-titulo);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-texto-tenue);
   }
 }
 
@@ -121,9 +254,15 @@
   margin-top: 1.4em;
 }
 
-.markdown h1 { font-size: 1.15rem; }
-.markdown h2 { font-size: 1.05rem; }
-.markdown h3 { font-size: 0.95rem; }
+.markdown h1 {
+  font-size: 1.15rem;
+}
+.markdown h2 {
+  font-size: 1.05rem;
+}
+.markdown h3 {
+  font-size: 0.95rem;
+}
 
 .markdown strong {
   color: var(--color-texto);
@@ -140,8 +279,12 @@
   padding-left: 1.25rem;
 }
 
-.markdown ul { list-style: disc; }
-.markdown ol { list-style: decimal; }
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
 
 .markdown li + li {
   margin-top: 0.35em;
@@ -167,7 +310,17 @@
 }
 
 .markdown blockquote {
-  border-left: 3px solid var(--color-borde);
+  border-left: 3px solid var(--color-acento-suave);
   padding-left: 0.85rem;
   color: var(--color-texto-tenue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

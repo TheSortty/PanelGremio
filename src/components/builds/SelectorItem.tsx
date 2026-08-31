@@ -72,6 +72,15 @@ export function SelectorItem({
         .from('items')
         .select('id, name, tier, item_power, two_handed')
         .eq('type', tipo)
+        /*
+          Solo lo que se puede dibujar. El dump del juego mezcla el equipo con
+          cosméticos de founder pack, capas decorativas, monturas de prueba y
+          hasta un "Ocultar arma secundaria" clasificado como objeto de mano
+          secundaria. Ninguno tiene arte, y comprobarlo contra el servicio de
+          render resultó ser la forma más confiable de separarlos: eran el 44 %
+          de la lista de capas. Ver la migración 20260831130000.
+        */
+        .eq('icon_ok', true)
         // Por tier y después alfabético: agrupa las variantes de un mismo ítem.
         .order('tier', { ascending: false })
         .order('name')
@@ -175,7 +184,7 @@ export function SelectorItem({
               className={cn(
                 'rounded px-1.5 py-0.5 text-xs font-medium transition-colors',
                 tier === null
-                  ? 'bg-acento text-white'
+                  ? 'bg-acento text-sobre-acento'
                   : 'text-texto-tenue hover:text-texto',
               )}
             >
@@ -189,7 +198,7 @@ export function SelectorItem({
                 className={cn(
                   'rounded px-1.5 py-0.5 text-xs font-medium transition-colors',
                   tier === t
-                    ? 'bg-acento text-white'
+                    ? 'bg-acento text-sobre-acento'
                     : 'text-texto-tenue hover:text-texto',
                 )}
               >

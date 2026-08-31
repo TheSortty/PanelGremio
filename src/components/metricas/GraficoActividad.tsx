@@ -186,8 +186,8 @@ export function GraficoActividad() {
                     intensidad === 0 && 'bg-superficie-alta text-texto-tenue',
                     intensidad === 1 && 'bg-acento/25 text-texto-suave',
                     intensidad === 2 && 'bg-acento/45 text-texto',
-                    intensidad === 3 && 'bg-acento/70 text-white',
-                    intensidad === 4 && 'bg-acento text-white',
+                    intensidad === 3 && 'bg-acento/70 text-sobre-acento',
+                    intensidad === 4 && 'bg-acento text-sobre-acento',
                   )}
                 >
                   <span className="opacity-70">{barra.etiqueta}h</span>

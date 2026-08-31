@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 import { BotonSalir } from '@/components/auth/BotonSalir'
+import { IconoChevron, IconoUsuario } from '@/components/ui/Iconos'
 import type { GuildRole } from '@/lib/domain/roles'
 
 export function MenuUsuario({
@@ -60,16 +61,9 @@ export function MenuUsuario({
           </span>
         )}
         <span className="hidden text-sm font-medium sm:inline">{nombre}</span>
-        <svg
-          className={`size-4 text-texto-tenue transition-transform ${abierto ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-        </svg>
+        <IconoChevron
+          className={`text-base text-texto-tenue transition-transform ${abierto ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {abierto && (
@@ -79,15 +73,16 @@ export function MenuUsuario({
         >
           <div className="border-b border-borde-suave px-3 py-2.5">
             <p className="truncate text-sm font-medium">{nombre}</p>
-            <p className="text-xs text-acento">{rol}</p>
+            <p className="grabado mt-0.5 text-acento">{rol}</p>
           </div>
           <div className="p-1.5">
             <Link
               href="/perfil"
               onClick={() => setAbierto(false)}
-              className="block rounded-lg px-2.5 py-1.5 text-xs font-medium text-texto-suave transition-colors hover:bg-superficie-alta hover:text-texto"
+              className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-texto-suave transition-colors hover:bg-superficie-alta hover:text-texto"
               role="menuitem"
             >
+              <IconoUsuario className="text-sm" />
               Mi perfil
             </Link>
             <BotonSalir className="[&>button]:w-full [&>button]:justify-start" />

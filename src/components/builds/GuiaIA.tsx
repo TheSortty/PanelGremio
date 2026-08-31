@@ -7,6 +7,7 @@ import { generarGuia } from '@/actions/guia'
 import { Aviso } from '@/components/ui/Aviso'
 import { Boton } from '@/components/ui/Boton'
 import { Card, CardTitulo } from '@/components/ui/Card'
+import { IconoChispa } from '@/components/ui/Iconos'
 import { Spinner } from '@/components/ui/Cargando'
 
 /**
@@ -46,7 +47,10 @@ export function GuiaIA({
 
   return (
     <Card className="lg:col-span-1">
-      <CardTitulo>Guía de la build</CardTitulo>
+      <CardTitulo className="flex items-center gap-2">
+        <IconoChispa className="text-acento" />
+        Guía de la build
+      </CardTitulo>
 
       {generando ? (
         <div className="flex flex-col items-center gap-3 py-12">

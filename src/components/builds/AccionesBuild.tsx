@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react'
 import { eliminarBuild } from '@/actions/builds'
 import { Aviso } from '@/components/ui/Aviso'
 import { Boton } from '@/components/ui/Boton'
+import { IconoPapelera, IconoPluma } from '@/components/ui/Iconos'
 import { Modal } from '@/components/ui/Modal'
 
 /**
@@ -30,6 +31,7 @@ export function AccionesBuild({
       <div className="flex gap-2">
         <Link href={`/builds/${buildId}/editar`}>
           <Boton variante="secundario" tamano="sm">
+            <IconoPluma className="text-sm" />
             Editar
           </Boton>
         </Link>
@@ -38,6 +40,7 @@ export function AccionesBuild({
           tamano="sm"
           onClick={() => setConfirmando(true)}
         >
+          <IconoPapelera className="text-sm" />
           Eliminar
         </Boton>
       </div>

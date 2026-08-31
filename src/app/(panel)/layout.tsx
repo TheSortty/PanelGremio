@@ -1,6 +1,9 @@
+import Link from 'next/link'
+
 import { Heartbeat } from '@/components/panel/Heartbeat'
 import { MenuUsuario } from '@/components/panel/MenuUsuario'
 import { Navegacion, type Enlace } from '@/components/panel/Navegacion'
+import { Blason } from '@/components/ui/Iconos'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
 import { esOficial, puedeGestionarUsuarios } from '@/lib/domain/roles'
 
@@ -40,11 +43,20 @@ export default async function PanelLayout({
     <div className="min-h-screen">
       <Heartbeat />
 
-      <header className="sticky top-0 z-40 border-b border-borde-suave bg-superficie/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-2.5 sm:px-6">
-          <span className="hidden shrink-0 text-sm font-bold tracking-tight sm:block">
-            PANEL DEL GREMIO
-          </span>
+      {/* La cabecera es la puerta del keep: borde de oro abajo, piedra
+          translúcida y el blasón del gremio a la izquierda. */}
+      <header className="sticky top-0 z-40 border-b border-borde-suave bg-fondo/85 shadow-[0_1px_0_oklch(0.78_0.135_80/0.12)] backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
+          <Link
+            href="/panel"
+            className="flex shrink-0 items-center gap-2"
+            aria-label="Panel del Gremio"
+          >
+            <Blason className="text-2xl text-acento" />
+            <span className="hidden font-titulo text-sm font-semibold uppercase tracking-[0.18em] lg:block">
+              Panel del Gremio
+            </span>
+          </Link>
           <Navegacion enlaces={enlaces} />
           <div className="ml-auto">
             <MenuUsuario

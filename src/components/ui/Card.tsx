@@ -12,7 +12,8 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-panel border border-borde-suave bg-superficie p-5 shadow-sm',
+        // .losa lleva el bisel de piedra; ver globals.css
+        'losa p-5',
         className,
       )}
     >

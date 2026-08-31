@@ -1,5 +1,6 @@
 import { Card, CardTitulo } from '@/components/ui/Card'
 import { Etiqueta } from '@/components/ui/Etiqueta'
+import { IconoLlama, IconoYelmo } from '@/components/ui/Iconos'
 import { Vacio } from '@/components/ui/Vacio'
 import type { Database } from '@/lib/db/database.types'
 import { tiempoRelativo } from '@/lib/utils/formato'
@@ -12,6 +13,7 @@ export function TablaMiembros({ miembros }: { miembros: Miembro[] }) {
       <Card>
         <CardTitulo>Miembros</CardTitulo>
         <Vacio
+          icono={IconoYelmo}
           titulo="Todavía no hay miembros activos"
           descripcion="Las cuentas aparecen acá cuando un administrador las aprueba."
         />
@@ -29,16 +31,16 @@ export function TablaMiembros({ miembros }: { miembros: Miembro[] }) {
         <table className="w-full min-w-[30rem] text-sm">
           <thead>
             <tr className="border-b border-borde text-left">
-              <th className="pb-2 pr-4 text-xs font-semibold uppercase tracking-wider text-texto-tenue">
+              <th className="grabado pb-2 pr-4 text-left">
                 Nombre
               </th>
-              <th className="pb-2 pr-4 text-xs font-semibold uppercase tracking-wider text-texto-tenue">
+              <th className="grabado pb-2 pr-4 text-left">
                 Rol
               </th>
-              <th className="pb-2 pr-4 text-xs font-semibold uppercase tracking-wider text-texto-tenue">
+              <th className="grabado pb-2 pr-4 text-left">
                 Última vez
               </th>
-              <th className="pb-2 text-xs font-semibold uppercase tracking-wider text-texto-tenue">
+              <th className="grabado pb-2 text-left">
                 Estado
               </th>
             </tr>
@@ -54,7 +56,10 @@ export function TablaMiembros({ miembros }: { miembros: Miembro[] }) {
                 </td>
                 <td className="py-2.5">
                   {miembro.online ? (
-                    <Etiqueta tono="exito">En línea</Etiqueta>
+                    <Etiqueta tono="exito">
+                      <IconoLlama className="mr-1 text-[11px]" />
+                      En línea
+                    </Etiqueta>
                   ) : (
                     <Etiqueta>Desconectado</Etiqueta>
                   )}

@@ -7,7 +7,12 @@
  * proyecto anterior (ver urlIconoHechizo).
  */
 
-const RENDER = 'https://render.albiononline.com/v1'
+/*
+  Las imágenes no se piden directo a render.albiononline.com sino a nuestra
+  propia ruta /icono, que reintenta los 502 intermitentes del servicio y cachea
+  el resultado un año. El detalle está en src/app/icono/[tipo]/[nombre]/route.ts.
+*/
+const ICONOS = '/icono'
 
 /**
  * Tamaños medidos contra la API real (espada T4):
@@ -41,7 +46,7 @@ export function urlIconoItem(
   // Verificado contra la API: @1, @2 y @3 devuelven imágenes distintas.
   const identificador = encantamiento > 0 ? `${id}@${encantamiento}` : id
 
-  return `${RENDER}/item/${encodeURIComponent(identificador)}.png?size=${TAMANOS_ICONO[tamano]}`
+  return `${ICONOS}/item/${encodeURIComponent(identificador)}.png?s=${TAMANOS_ICONO[tamano]}`
 }
 
 /**
@@ -63,7 +68,7 @@ export function urlIconoHechizo(
   opciones: { tamano?: TamanoIcono } = {},
 ): string {
   const { tamano = 'mini' } = opciones
-  return `${RENDER}/spell/${encodeURIComponent(id)}.png?size=${TAMANOS_ICONO[tamano]}`
+  return `${ICONOS}/hechizo/${encodeURIComponent(id)}.png?s=${TAMANOS_ICONO[tamano]}`
 }
 
 // -----------------------------------------------------------------------------

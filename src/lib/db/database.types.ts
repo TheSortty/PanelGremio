@@ -216,6 +216,7 @@ export type Database = {
       items: {
         Row: {
           enchantments: Json
+          icon_ok: boolean
           id: string
           item_power: number | null
           name: string
@@ -226,6 +227,7 @@ export type Database = {
         }
         Insert: {
           enchantments?: Json
+          icon_ok?: boolean
           id: string
           item_power?: number | null
           name: string
@@ -236,6 +238,7 @@ export type Database = {
         }
         Update: {
           enchantments?: Json
+          icon_ok?: boolean
           id?: string
           item_power?: number | null
           name?: string

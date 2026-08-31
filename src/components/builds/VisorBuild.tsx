@@ -61,7 +61,7 @@ function Pieza({
             )}
           </div>
           {ench > 0 && (
-            <span className="absolute -right-1 -top-1 rounded bg-acento px-1 text-[10px] font-bold text-white">
+            <span className="absolute -right-1 -top-1 rounded bg-acento px-1 text-[10px] font-bold text-sobre-acento">
               .{ench}
             </span>
           )}

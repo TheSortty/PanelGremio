@@ -2,10 +2,35 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import type { ComponentType, SVGProps } from 'react'
 
+import {
+  IconoEscudo,
+  IconoEspada,
+  IconoGrafico,
+  IconoLlave,
+  IconoMapa,
+  IconoPergamino,
+} from '@/components/ui/Iconos'
 import { cn } from '@/lib/utils/cn'
 
 export type Enlace = { href: string; etiqueta: string }
+
+/**
+ * Icono de cada sección, resuelto por ruta.
+ *
+ * Va acá y no en el layout para que la lista de enlaces siga siendo datos
+ * simples y se pueda pasar del servidor al cliente: un componente de React no
+ * se serializa al cruzar esa frontera.
+ */
+const ICONOS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+  '/panel': IconoEscudo,
+  '/builds': IconoEspada,
+  '/rutas': IconoMapa,
+  '/metricas': IconoGrafico,
+  '/registro': IconoPergamino,
+  '/admin': IconoLlave,
+}
 
 /**
  * Navegación principal.
@@ -14,15 +39,20 @@ export type Enlace = { href: string; etiqueta: string }
  * App.tsx. Eso significaba: una sola URL para toda la aplicación, sin poder
  * compartir el enlace de una build, sin botón atrás, y recargando siempre en
  * el panel. Ahora cada sección es una ruta de verdad.
+ *
+ * La sección activa se marca con una línea de oro abajo, como el reflejo de la
+ * antorcha sobre la piedra, en vez de rellenar el botón entero: con seis
+ * secciones, seis bloques de color pesaban más que el contenido.
  */
 export function Navegacion({ enlaces }: { enlaces: Enlace[] }) {
   const pathname = usePathname()
 
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto" aria-label="Secciones">
+    <nav className="flex items-center gap-0.5 overflow-x-auto" aria-label="Secciones">
       {enlaces.map(({ href, etiqueta }) => {
         // Una subruta (/builds/nueva) tiene que marcar activo a /builds.
         const activo = pathname === href || pathname.startsWith(`${href}/`)
+        const Icono = ICONOS[href]
 
         return (
           <Link
@@ -30,13 +60,18 @@ export function Navegacion({ enlaces }: { enlaces: Enlace[] }) {
             href={href}
             aria-current={activo ? 'page' : undefined}
             className={cn(
-              'shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+              'relative flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
+              'after:absolute after:inset-x-2.5 after:bottom-0 after:h-px after:transition-colors',
               activo
-                ? 'bg-acento text-white'
-                : 'text-texto-suave hover:bg-superficie-alta hover:text-texto',
+                ? 'text-acento after:bg-acento'
+                : 'text-texto-suave after:bg-transparent hover:bg-superficie-alta hover:text-texto',
             )}
           >
-            {etiqueta}
+            {Icono && <Icono className="text-base" />}
+            {/* En pantallas chicas queda solo el icono: seis etiquetas no
+                entran y la barra terminaba con scroll horizontal siempre. */}
+            <span className="hidden sm:inline">{etiqueta}</span>
+            <span className="sr-only sm:hidden">{etiqueta}</span>
           </Link>
         )
       })}

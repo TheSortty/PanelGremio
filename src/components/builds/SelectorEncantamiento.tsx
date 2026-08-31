@@ -48,7 +48,7 @@ export function SelectorEncantamiento({
           className={cn(
             'rounded px-1.5 py-0.5 text-xs font-medium transition-colors',
             valor === n
-              ? 'bg-acento text-white'
+              ? 'bg-acento text-sobre-acento'
               : 'bg-superficie-alta text-texto-tenue hover:text-texto',
           )}
         >

@@ -32,7 +32,7 @@ export function TarjetaBuild({ build }: { build: Build }) {
               className="size-9 rounded border border-borde bg-fondo"
             />
             {(item.ench ?? 0) > 0 && (
-              <span className="absolute -right-1 -top-1 rounded bg-acento px-1 text-[9px] font-bold leading-tight text-white">
+              <span className="absolute -right-1 -top-1 rounded bg-acento px-1 text-[9px] font-bold leading-tight text-sobre-acento">
                 {item.ench}
               </span>
             )}

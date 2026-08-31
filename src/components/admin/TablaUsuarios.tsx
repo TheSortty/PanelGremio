@@ -86,7 +86,7 @@ export function TablaUsuarios({
               className={cn(
                 'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
                 filtroActual === valor
-                  ? 'bg-acento text-white'
+                  ? 'bg-acento text-sobre-acento'
                   : 'bg-superficie-alta text-texto-suave hover:text-texto',
               )}
             >
@@ -112,7 +112,7 @@ export function TablaUsuarios({
                     (h, i) => (
                       <th
                         key={i}
-                        className="pb-2 pr-4 text-xs font-semibold uppercase tracking-wider text-texto-tenue"
+                        className="grabado pb-2 pr-4 text-left"
                       >
                         {h}
                       </th>

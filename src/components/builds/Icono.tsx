@@ -13,14 +13,17 @@ import { cn } from '@/lib/utils/cn'
 /**
  * Icono con reemplazo cuando la imagen no carga.
  *
- * render.albiononline.com es inestable: midiendo 96 iconos de ítems reales,
- * ~94 % responden y el resto devuelve 502. No es que falte el arte —un mismo
- * ítem puede dar 502 y al reintentar 200—, es el servicio que falla de forma
- * intermitente.
+ * render.albiononline.com es inestable: el mismo identificador devuelve 502 y
+ * al reintentar 200. No falta el arte, falla el servicio.
  *
- * Sin esto el navegador dibuja el icono de imagen rota, que en una grilla de
- * equipamiento se lee como "esta build está mal cargada". El reemplazo muestra
- * las iniciales del ítem, que al menos identifica la pieza.
+ * El grueso del problema lo resuelve la ruta /icono, que reintenta del lado del
+ * servidor antes de contestar. Acá queda un reintento más por si esa también se
+ * queda sin intentos: se cambia la clave del <img> para forzar a que el
+ * navegador vuelva a pedir la imagen en vez de reusar el fallo cacheado.
+ *
+ * Recién si el segundo intento también falla se muestra el reemplazo con las
+ * iniciales. Sin esto el navegador dibuja el icono de imagen rota, que en una
+ * grilla de equipamiento se lee como "esta build está mal cargada".
  */
 function IconoBase({
   src,
@@ -33,7 +36,8 @@ function IconoBase({
   className?: string
   tamanoTexto?: string
 }) {
-  const [fallo, setFallo] = useState(false)
+  const [intento, setIntento] = useState(0)
+  const fallo = intento > 1
 
   if (fallo) {
     return (
@@ -54,12 +58,15 @@ function IconoBase({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      // La clave cambia con el intento: React reemplaza el nodo y el navegador
+      // vuelve a pedir la imagen en lugar de quedarse con el error anterior.
+      key={intento}
+      src={intento === 0 ? src : `${src}&r=${intento}`}
       alt={nombre}
       title={nombre}
       className={className}
       loading="lazy"
-      onError={() => setFallo(true)}
+      onError={() => setIntento((n) => n + 1)}
     />
   )
 }

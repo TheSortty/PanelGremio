@@ -3,10 +3,12 @@
 import { useOptimistic, useState, useTransition } from 'react'
 
 import { limpiarMapa, renombrarMarcador } from '@/actions/mapa'
+import { MapaRoyal } from '@/components/mapa/MapaRoyal'
 import { crearMarcador, eliminarMarcador } from '@/actions/marcadores'
 import { Aviso } from '@/components/ui/Aviso'
 import { Boton } from '@/components/ui/Boton'
 import { Card } from '@/components/ui/Card'
+import { IconoBandera, IconoCalavera, IconoCarro } from '@/components/ui/Iconos'
 import { Modal } from '@/components/ui/Modal'
 import type { Tables } from '@/lib/db/database.types'
 import { cn } from '@/lib/utils/cn'
@@ -17,16 +19,36 @@ type Marcador = Pick<
 >
 type TipoMarcador = Marcador['type']
 
-const TIPOS: { valor: TipoMarcador; etiqueta: string; color: string }[] = [
-  { valor: 'objective', etiqueta: 'Objetivo', color: 'bg-alerta' },
-  { valor: 'transport', etiqueta: 'Transporte', color: 'bg-acento' },
-  { valor: 'gank', etiqueta: 'Gank', color: 'bg-peligro' },
+/**
+ * Los tres tipos de marcador, cada uno con su glifo.
+ *
+ * Antes eran puntos de colores. Sobre una captura del mapa real —verde,
+ * marrón y agua— tres círculos de 16 px se distinguían mal entre sí y peor
+ * del terreno, y quien no diferencia rojo de verde no los distinguía en
+ * absoluto. La forma resuelve las dos cosas: una bandera, un carro y una
+ * calavera se leen aunque el color se pierda.
+ */
+const TIPOS: {
+  valor: TipoMarcador
+  etiqueta: string
+  color: string
+  icono: typeof IconoBandera
+}[] = [
+  { valor: 'objective', etiqueta: 'Objetivo', color: 'bg-alerta', icono: IconoBandera },
+  { valor: 'transport', etiqueta: 'Transporte', color: 'bg-acento', icono: IconoCarro },
+  { valor: 'gank', etiqueta: 'Gank', color: 'bg-peligro', icono: IconoCalavera },
 ]
 
 const COLOR_POR_TIPO: Record<TipoMarcador, string> = {
-  objective: 'bg-alerta',
-  transport: 'bg-acento',
-  gank: 'bg-peligro',
+  objective: 'bg-alerta text-sobre-acento',
+  transport: 'bg-acento text-sobre-acento',
+  gank: 'bg-peligro text-sobre-acento',
+}
+
+const ICONO_POR_TIPO: Record<TipoMarcador, typeof IconoBandera> = {
+  objective: IconoBandera,
+  transport: IconoCarro,
+  gank: IconoCalavera,
 }
 
 const NOMBRE_POR_TIPO: Record<TipoMarcador, string> = {
@@ -133,7 +155,7 @@ export function MapaEstrategico({
               role="radiogroup"
               aria-label="Tipo de marcador"
             >
-          {TIPOS.map(({ valor, etiqueta: nombreTipo, color }) => (
+          {TIPOS.map(({ valor, etiqueta: nombreTipo, color, icono: IconoTipo }) => (
             <button
               key={valor}
               type="button"
@@ -147,7 +169,12 @@ export function MapaEstrategico({
                   : 'text-texto-tenue hover:text-texto',
               )}
             >
-              <span className={cn('size-2 rounded-full', color)} />
+              <IconoTipo
+                className={cn(
+                  'text-sm',
+                  tipo === valor ? color.replace('bg-', 'text-') : undefined,
+                )}
+              />
               {nombreTipo}
             </button>
           ))}
@@ -165,15 +192,17 @@ export function MapaEstrategico({
       <div
         onClick={alHacerClic}
         className={cn(
-          'relative aspect-video w-full overflow-hidden rounded-lg border border-borde bg-superficie-alta bg-cover bg-center',
+          'relative aspect-video w-full overflow-hidden rounded-lg border border-borde',
           puedeEditar ? 'cursor-crosshair' : 'cursor-default',
         )}
-        style={{
-          backgroundImage:
-            "url('https://albiononline.com/assets/images/uploads/media/data/26/map_royal_continent.jpg')",
-        }}
       >
-        {marcadores.map((marcador) => (
+        {/* El mapa va detrás y sin capturar el puntero: los clics tienen que
+            llegar al contenedor, que es el que calcula la posición. */}
+        <MapaRoyal className="pointer-events-none absolute inset-0 size-full" />
+        {marcadores.map((marcador) => {
+          const IconoMarcador = ICONO_POR_TIPO[marcador.type]
+
+          return (
           <button
             key={marcador.id}
             type="button"
@@ -195,11 +224,14 @@ export function MapaEstrategico({
             }
             style={{ left: `${marcador.x}%`, top: `${marcador.y}%` }}
             className={cn(
-              'absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-lg transition-transform hover:scale-125',
+              'absolute flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_1px_4px_oklch(0_0_0/0.6)] ring-2 ring-fondo/70 transition-transform hover:scale-125',
               COLOR_POR_TIPO[marcador.type],
             )}
-          />
-        ))}
+          >
+            <IconoMarcador className="text-[13px]" />
+          </button>
+          )
+        })}
       </div>
 
       <p className="mt-2 text-xs text-texto-tenue">
