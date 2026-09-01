@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ComponentType, SVGProps } from 'react'
 
 import { TablaMiembros } from '@/components/panel/TablaMiembros'
@@ -5,7 +6,10 @@ import { Card } from '@/components/ui/Card'
 import { Aviso } from '@/components/ui/Aviso'
 import { IconoEstandarte, IconoLlama, IconoYelmo } from '@/components/ui/Iconos'
 import { exigirMiembroActivo } from '@/lib/auth/sesion'
+import { confirmadosPorEvento, listarEventos } from '@/lib/data/eventos'
+import { yaPaso } from '@/lib/domain/eventos'
 import { createClient } from '@/lib/supabase/server'
+import { fechaHora } from '@/lib/utils/formato'
 
 export const metadata = { title: 'Panel' }
 
@@ -64,6 +68,14 @@ export default async function Panel() {
   const total = miembros?.length ?? 0
   const enLinea = miembros?.filter((m) => m.online).length ?? 0
 
+  // El más cercano de los que todavía no pasaron. listarEventos ordena de más
+  // nuevo a más viejo, así que el próximo es el último de los futuros.
+  const eventos = await listarEventos()
+  const proximo = eventos.filter((e) => !yaPaso(e.comienza_en)).at(-1) ?? null
+  const confirmados = proximo
+    ? ((await confirmadosPorEvento([proximo.id])).get(proximo.id) ?? 0)
+    : 0
+
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -79,12 +91,30 @@ export default async function Panel() {
             <p className="grabado">Próximo evento</p>
             <IconoEstandarte className="shrink-0 text-lg text-acento/45" />
           </div>
-          <p className="mt-1.5 font-titulo text-lg font-semibold leading-snug">
-            ZvZ — mañana 18:00 UTC
-          </p>
-          <p className="mt-0.5 text-xs text-texto-tenue">
-            Fijo en el código; todavía no hay calendario de eventos.
-          </p>
+          {/* El próximo evento de verdad. Acá había un "ZvZ — mañana 18:00
+              UTC" escrito en el código, que no cambiaba nunca. */}
+          {proximo ? (
+            <Link href={`/eventos/${proximo.id}`} className="group">
+              <p className="mt-1.5 font-titulo text-lg font-semibold leading-snug transition-colors group-hover:text-acento">
+                {proximo.tipo} — {proximo.titulo}
+              </p>
+              <p className="mt-0.5 text-xs text-texto-tenue">
+                {fechaHora(proximo.comienza_en)}
+                {confirmados > 0 && ` · ${confirmados} confirmados`}
+              </p>
+            </Link>
+          ) : (
+            <>
+              <p className="mt-1.5 font-titulo text-lg font-semibold leading-snug text-texto-tenue">
+                Nada convocado
+              </p>
+              <p className="mt-0.5 text-xs text-texto-tenue">
+                <Link href="/eventos" className="text-acento hover:underline">
+                  Ver el calendario
+                </Link>
+              </p>
+            </>
+          )}
         </Card>
       </div>
 

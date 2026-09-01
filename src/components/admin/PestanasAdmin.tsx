@@ -3,7 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { IconoPergamino, IconoYelmo } from '@/components/ui/Iconos'
+import {
+  IconoBalanza,
+  IconoLlave,
+  IconoPergamino,
+  IconoYelmo,
+} from '@/components/ui/Iconos'
 import { cn } from '@/lib/utils/cn'
 
 /**
@@ -18,14 +23,16 @@ import { cn } from '@/lib/utils/cn'
  */
 const PESTANAS = [
   { href: '/admin', etiqueta: 'Usuarios', icono: IconoYelmo },
+  { href: '/admin/multas', etiqueta: 'Multas', icono: IconoBalanza },
   { href: '/admin/registro', etiqueta: 'Registro', icono: IconoPergamino },
+  { href: '/admin/ajustes', etiqueta: 'Ajustes', icono: IconoLlave },
 ] as const
 
 export function PestanasAdmin({ pendientes }: { pendientes: number }) {
   const pathname = usePathname()
 
   return (
-    <div className="flex items-center gap-1 border-b border-borde-suave">
+    <div className="flex items-center gap-1 overflow-x-auto border-b border-borde-suave">
       {PESTANAS.map(({ href, etiqueta, icono: Icono }) => {
         const activa = pathname === href
 
@@ -35,7 +42,7 @@ export function PestanasAdmin({ pendientes }: { pendientes: number }) {
             href={href}
             aria-current={activa ? 'page' : undefined}
             className={cn(
-              'relative -mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+              '-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
               activa
                 ? 'border-acento text-acento'
                 : 'border-transparent text-texto-suave hover:text-texto',

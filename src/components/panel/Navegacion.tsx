@@ -6,8 +6,10 @@ import type { ComponentType, SVGProps } from 'react'
 
 import {
   IconoBalanza,
+  IconoCalavera,
   IconoEscudo,
   IconoEspada,
+  IconoEstandarte,
   IconoLlave,
   IconoMapa,
 } from '@/components/ui/Iconos'
@@ -25,8 +27,10 @@ export type Enlace = { href: string; etiqueta: string }
 const ICONOS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   '/panel': IconoEscudo,
   '/builds': IconoEspada,
+  '/eventos': IconoEstandarte,
   '/rutas': IconoMapa,
   '/mercado': IconoBalanza,
+  '/killboard': IconoCalavera,
   '/admin': IconoLlave,
 }
 

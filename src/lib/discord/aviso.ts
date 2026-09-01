@@ -1,33 +1,94 @@
 import 'server-only'
 
 /**
- * Aviso a Discord cuando llega una solicitud.
+ * Publicación en Discord.
  *
- * QUÉ RESUELVE
+ * EL ORDEN IMPORTA: PRIMERO LA WEB, DESPUÉS DISCORD
  *
- * El panel puede recibir solicitudes perfectas, pero si nadie las mira quedan
- * ahí. El staff vive en Discord, no en el panel: la única forma de que una
- * solicitud se atienda rápido es que aparezca donde ya están mirando.
+ * Todo lo que se anuncia se carga primero acá, donde queda con autor, fecha y
+ * estado, y recién después se publica allá. Discord no guarda nada que el panel
+ * no tenga: es la vidriera, no el archivo.
  *
- * Es la pieza que hace que el panel REEMPLACE al canal en vez de competir con
- * él: el formulario se llena acá, con los campos completos y validados, y el
- * aviso llega allá.
+ * Por eso todas las funciones de este archivo se llaman DESPUÉS de escribir en
+ * la base, y ninguna propaga su error. Si Discord está caído, el evento igual
+ * quedó creado y la multa igual quedó puesta. Al revés —anunciar primero—
+ * podría publicar algo que después no se guardó.
  *
- * POR QUÉ UN WEBHOOK Y NO UN BOT
+ * POR QUÉ WEBHOOKS Y NO UN BOT
  *
  * Un bot es una aplicación que hay que registrar, hospedar y mantener con un
- * token que puede hacer cosas en el servidor. Un webhook es una URL que solo
- * sirve para publicar en UN canal: si se filtra, lo peor que pasa es que
- * alguien escriba mensajes ahí. Para avisar de una solicitud alcanza y sobra.
+ * token que puede actuar en el servidor. Un webhook es una URL que solo publica
+ * en UN canal: si se filtra, lo peor que pasa es que alguien escriba ahí.
  *
- * SI NO ESTÁ CONFIGURADO, NO PASA NADA
- *
- * Sin la variable, esta función no hace nada y devuelve false. El panel
- * funciona igual; simplemente el staff se entera entrando a Administración,
- * donde la insignia ya muestra cuántas hay sin resolver.
+ * Cada canal tiene su webhook, así que las solicitudes no caen en el mismo lado
+ * que los eventos. El que no esté configurado, simplemente no publica.
  */
 
-const WEBHOOK = 'DISCORD_WEBHOOK_SOLICITUDES'
+export const CANALES = {
+  solicitudes: 'DISCORD_WEBHOOK_SOLICITUDES',
+  eventos: 'DISCORD_WEBHOOK_EVENTOS',
+  multas: 'DISCORD_WEBHOOK_MULTAS',
+} as const
+
+export type Canal = keyof typeof CANALES
+
+/** El oro de la antorcha, para que se reconozca de dónde viene el mensaje. */
+const ORO = 0xe0b65c
+
+type Campo = { name: string; value: string; inline?: boolean }
+
+type Mensaje = {
+  titulo: string
+  descripcion?: string
+  campos?: Campo[]
+  pie?: string
+  color?: number
+}
+
+function urlDelPanel(ruta: string) {
+  const sitio = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+  return sitio ? `${sitio}${ruta}` : null
+}
+
+/**
+ * Publica en un canal. Devuelve false si no está configurado o si falló.
+ *
+ * Nunca lanza: quien la llama ya guardó lo importante y no debería enterarse
+ * de que Discord tuvo un mal día.
+ */
+export async function publicar(canal: Canal, mensaje: Mensaje): Promise<boolean> {
+  const url = process.env[CANALES[canal]]?.trim()
+  if (!url) return false
+
+  try {
+    const respuesta = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: mensaje.titulo,
+            description: mensaje.descripcion,
+            color: mensaje.color ?? ORO,
+            // Los campos vacíos ocupan el mismo lugar que los llenos y no dicen
+            // nada, así que se filtran antes de mandarlos.
+            fields: (mensaje.campos ?? []).filter((c) => c.value),
+            footer: mensaje.pie ? { text: mensaje.pie } : undefined,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }),
+    })
+
+    return respuesta.ok
+  } catch {
+    return false
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Mensajes concretos
+// -----------------------------------------------------------------------------
 
 export type AvisoSolicitud = {
   nombre: string
@@ -42,71 +103,100 @@ export type AvisoSolicitud = {
   discord: string | null
 }
 
-/** Los campos que Discord muestra en dos columnas. */
-function campos(s: AvisoSolicitud) {
-  const lista: { name: string; value: string; inline: boolean }[] = [
-    { name: 'Edad', value: String(s.edad), inline: true },
-    { name: 'Dispositivo', value: s.dispositivo, inline: true },
-    { name: 'Horario', value: s.horario, inline: false },
-    {
-      name: 'Rol',
-      value: s.rolSecundario
-        ? `${s.rolPrincipal} · ${s.rolSecundario}`
-        : s.rolPrincipal,
-      inline: true,
-    },
-    { name: 'Contenido', value: s.contenido.join(', '), inline: true },
-  ]
+export async function avisarSolicitud(s: AvisoSolicitud) {
+  const panel = urlDelPanel('/admin')
 
-  // Los opcionales solo aparecen si vinieron: un campo vacío en Discord ocupa
-  // el mismo lugar que uno lleno y no dice nada.
-  if (s.gremioAnterior) {
-    lista.push({ name: 'Gremio anterior', value: s.gremioAnterior, inline: true })
-  }
-  if (s.quienLoTrajo) {
-    lista.push({ name: 'Lo trajo', value: s.quienLoTrajo, inline: true })
-  }
-  if (s.discord) {
-    lista.push({ name: 'Discord', value: s.discord, inline: true })
-  }
-
-  return lista
+  return publicar('solicitudes', {
+    // El nombre va en el título para que la notificación del teléfono ya diga
+    // de quién se trata.
+    titulo: `Nueva solicitud: ${s.nombre}`,
+    descripcion: panel ? `Revisala en ${panel}` : 'Revisala en Administración.',
+    campos: [
+      { name: 'Edad', value: String(s.edad), inline: true },
+      { name: 'Dispositivo', value: s.dispositivo, inline: true },
+      { name: 'Horario', value: s.horario },
+      {
+        name: 'Rol',
+        value: s.rolSecundario
+          ? `${s.rolPrincipal} · ${s.rolSecundario}`
+          : s.rolPrincipal,
+        inline: true,
+      },
+      { name: 'Contenido', value: s.contenido.join(', '), inline: true },
+      { name: 'Gremio anterior', value: s.gremioAnterior ?? '', inline: true },
+      { name: 'Lo trajo', value: s.quienLoTrajo ?? '', inline: true },
+      { name: 'Discord', value: s.discord ?? '', inline: true },
+    ],
+    pie: 'Las capturas están en el panel',
+  })
 }
 
-export async function avisarSolicitud(s: AvisoSolicitud): Promise<boolean> {
-  const url = process.env[WEBHOOK]?.trim()
-  if (!url) return false
+export type AvisoEvento = {
+  id: string
+  titulo: string
+  tipo: string
+  comienzaEn: Date
+  lugar: string | null
+  ipMinimo: number | null
+  descripcion: string | null
+}
 
-  const sitio = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+export async function avisarEvento(e: AvisoEvento) {
+  const panel = urlDelPanel(`/eventos/${e.id}`)
 
-  try {
-    const respuesta = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        // El nombre del postulante va en el título y no en el contenido para
-        // que la notificación del teléfono ya diga de quién se trata.
-        embeds: [
-          {
-            title: `Nueva solicitud: ${s.nombre}`,
-            description: sitio
-              ? `Revisala en ${sitio}/admin`
-              : 'Revisala en la sección de Administración del panel.',
-            // El oro de la antorcha, para que se reconozca de dónde viene.
-            color: 0xe0b65c,
-            fields: campos(s),
-            footer: { text: 'Las capturas están en el panel' },
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      }),
-    })
+  /*
+    La hora va como marca de tiempo de Discord (<t:epoch:F>), no como texto.
 
-    return respuesta.ok
-  } catch {
-    // Discord caído o URL mal escrita. La solicitud ya está guardada, que es lo
-    // que importa: no se propaga el error para no hacerle creer al postulante
-    // que su envío falló.
-    return false
-  }
+    Discord la traduce a la zona horaria de cada uno: el gremio juega desde
+    varios husos y "18:00" a secas es la fuente más común de que alguien
+    aparezca una hora tarde. El segundo formato, R, muestra "en 3 horas".
+  */
+  const epoch = Math.floor(e.comienzaEn.getTime() / 1000)
+
+  return publicar('eventos', {
+    titulo: `${e.tipo}: ${e.titulo}`,
+    descripcion: [
+      `<t:${epoch}:F> · <t:${epoch}:R>`,
+      e.descripcion,
+      panel ? `\nConfirmá asistencia en ${panel}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n'),
+    campos: [
+      { name: 'Punto de reunión', value: e.lugar ?? '', inline: true },
+      {
+        name: 'IP mínimo',
+        value: e.ipMinimo ? String(e.ipMinimo) : '',
+        inline: true,
+      },
+    ],
+  })
+}
+
+export type AvisoMulta = {
+  miembro: string
+  monto: number
+  motivo: string
+  emitidaPor: string
+}
+
+export async function avisarMulta(m: AvisoMulta) {
+  return publicar('multas', {
+    titulo: `Multa a ${m.miembro}`,
+    descripcion: m.motivo,
+    // Rojo sangre: una multa no es una novedad más.
+    color: 0xc4553d,
+    campos: [
+      {
+        name: 'Monto',
+        value:
+          m.monto > 0
+            ? `${new Intl.NumberFormat('es-AR').format(m.monto)} de plata`
+            : 'Advertencia sin monto',
+        inline: true,
+      },
+      { name: 'La puso', value: m.emitidaPor, inline: true },
+    ],
+    pie: 'El detalle está en el panel, en Administración',
+  })
 }

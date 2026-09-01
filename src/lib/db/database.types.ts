@@ -72,6 +72,48 @@ export type Database = {
           },
         ]
       }
+      ajustes: {
+        Row: {
+          actualizado_en: string
+          actualizado_por: string | null
+          albion_guild_id: string | null
+          albion_guild_name: string | null
+          id: boolean
+          region: string
+        }
+        Insert: {
+          actualizado_en?: string
+          actualizado_por?: string | null
+          albion_guild_id?: string | null
+          albion_guild_name?: string | null
+          id?: boolean
+          region?: string
+        }
+        Update: {
+          actualizado_en?: string
+          actualizado_por?: string | null
+          albion_guild_id?: string | null
+          albion_guild_name?: string | null
+          id?: boolean
+          region?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ajustes_actualizado_por_fkey"
+            columns: ["actualizado_por"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ajustes_actualizado_por_fkey"
+            columns: ["actualizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           actualizada_en: string
@@ -243,6 +285,168 @@ export type Database = {
           {
             foreignKeyName: "builds_author_id_fkey"
             columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_attendance: {
+        Row: {
+          event_id: string
+          profile_id: string
+          respondido_en: string
+          respuesta: Database["public"]["Enums"]["respuesta_evento"]
+          rol: string | null
+        }
+        Insert: {
+          event_id: string
+          profile_id: string
+          respondido_en?: string
+          respuesta: Database["public"]["Enums"]["respuesta_evento"]
+          rol?: string | null
+        }
+        Update: {
+          event_id?: string
+          profile_id?: string
+          respondido_en?: string
+          respuesta?: Database["public"]["Enums"]["respuesta_evento"]
+          rol?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendance_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendance_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          actualizado_en: string
+          comienza_en: string
+          creado_en: string
+          creado_por: string | null
+          descripcion: string | null
+          id: string
+          ip_minimo: number | null
+          lugar: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento"]
+          titulo: string
+        }
+        Insert: {
+          actualizado_en?: string
+          comienza_en: string
+          creado_en?: string
+          creado_por?: string | null
+          descripcion?: string | null
+          id?: string
+          ip_minimo?: number | null
+          lugar?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento"]
+          titulo: string
+        }
+        Update: {
+          actualizado_en?: string
+          comienza_en?: string
+          creado_en?: string
+          creado_por?: string | null
+          descripcion?: string | null
+          id?: string
+          ip_minimo?: number | null
+          lugar?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento"]
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fines: {
+        Row: {
+          emitida_en: string
+          emitida_por: string | null
+          estado: Database["public"]["Enums"]["estado_multa"]
+          id: string
+          monto: number
+          motivo: string
+          profile_id: string
+          saldada_en: string | null
+        }
+        Insert: {
+          emitida_en?: string
+          emitida_por?: string | null
+          estado?: Database["public"]["Enums"]["estado_multa"]
+          id?: string
+          monto?: number
+          motivo: string
+          profile_id: string
+          saldada_en?: string | null
+        }
+        Update: {
+          emitida_en?: string
+          emitida_por?: string | null
+          estado?: Database["public"]["Enums"]["estado_multa"]
+          id?: string
+          monto?: number
+          motivo?: string
+          profile_id?: string
+          saldada_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fines_emitida_por_fkey"
+            columns: ["emitida_por"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fines_emitida_por_fkey"
+            columns: ["emitida_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fines_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fines_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -574,6 +778,7 @@ export type Database = {
     }
     Enums: {
       dispositivo_juego: "PC" | "Móvil" | "Tablet"
+      estado_multa: "pendiente" | "pagada" | "perdonada"
       guild_role:
         | "Maestro del Gremio"
         | "Mano Derecha"
@@ -597,8 +802,16 @@ export type Database = {
         | "resource"
         | "fish"
       marker_type: "transport" | "gank" | "objective"
+      respuesta_evento: "voy" | "quizas" | "no_voy"
       spell_slot: "Q" | "W" | "E" | "Passive"
       tipo_cuenta: "primera" | "segunda"
+      tipo_evento:
+        | "ZvZ"
+        | "GvG"
+        | "Mazmorra"
+        | "Recolección"
+        | "Faction"
+        | "Otro"
       user_status: "pending" | "active" | "rejected"
     }
     CompositeTypes: {
@@ -731,6 +944,7 @@ export const Constants = {
   public: {
     Enums: {
       dispositivo_juego: ["PC", "Móvil", "Tablet"],
+      estado_multa: ["pendiente", "pagada", "perdonada"],
       guild_role: [
         "Maestro del Gremio",
         "Mano Derecha",
@@ -756,8 +970,10 @@ export const Constants = {
         "fish",
       ],
       marker_type: ["transport", "gank", "objective"],
+      respuesta_evento: ["voy", "quizas", "no_voy"],
       spell_slot: ["Q", "W", "E", "Passive"],
       tipo_cuenta: ["primera", "segunda"],
+      tipo_evento: ["ZvZ", "GvG", "Mazmorra", "Recolección", "Faction", "Otro"],
       user_status: ["pending", "active", "rejected"],
     },
   },

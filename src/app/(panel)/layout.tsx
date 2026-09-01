@@ -12,8 +12,10 @@ import { puedeGestionarUsuarios } from '@/lib/domain/roles'
 const ENLACES_BASE: Enlace[] = [
   { href: '/panel', etiqueta: 'Panel' },
   { href: '/builds', etiqueta: 'Builds' },
+  { href: '/eventos', etiqueta: 'Eventos' },
   { href: '/rutas', etiqueta: 'Rutas' },
   { href: '/mercado', etiqueta: 'Mercado' },
+  { href: '/killboard', etiqueta: 'Killboard' },
 ]
 
 /**
