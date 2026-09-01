@@ -17,6 +17,10 @@ import {
   comoArray,
   hechizosDeItem,
   idsDeHechizosPasivos,
+  idsDePescado,
+  recetaDeItem,
+  recolectarMateriales,
+  type Receta,
   nombreLegible,
   tipoDeItem,
   statsDeItem,
@@ -38,6 +42,7 @@ type FilaItem = {
   two_handed: boolean
   enchantments: Record<string, number>
   stats: Record<string, number>
+  crafting: Receta | null
 }
 
 type FilaItemSpell = {
@@ -80,6 +85,10 @@ async function main() {
   }
   console.log(`  ${porId.size} ítems en el dump canónico`)
 
+  // Hay que saber qué se usa como ingrediente ANTES de clasificar, porque de
+  // eso depende que un simpleitem sea 'resource' u 'other'.
+  console.log(`  ${recolectarMateriales(crudos)} ids usados como material`)
+
   const items: FilaItem[] = []
   const itemSpells: FilaItemSpell[] = []
   const idsDeItems = new Set<string>()
@@ -102,6 +111,7 @@ async function main() {
         two_handed: esDosManos(nodo),
         enchantments: encantamientosDeItem(nodo),
         stats: statsDeItem(nodo),
+        crafting: recetaDeItem(nodo),
       })
 
       for (const h of hechizosDeItem(nodo, porId, idsPasivos)) {
@@ -115,7 +125,52 @@ async function main() {
     }
   }
 
-  console.log(`\n${items.length} ítems, ${itemSpells.length} vínculos ítem-hechizo.\n`)
+  /*
+    Los peces crudos se agregan aparte.
+
+    El dump no los define como ítems —el único con ficha propia es el tiburón
+    jefe—, así que el bucle de arriba no los ve. Pero existen en el mercado y
+    son el ingrediente de los chuletones, así que la receta de T1_FISHCHOPS es
+    la lista autorizada de cuáles hay: treinta y ocho, uno por tier y por agua,
+    cada uno con cuántos chuletones rinde. Sin ellos no se puede calcular
+    cuánto deja pescar.
+  */
+  let peces = 0
+  for (const pez of idsDePescado(crudos)) {
+    if (idsDeItems.has(pez.id)) continue
+    idsDeItems.add(pez.id)
+    peces++
+
+    items.push({
+      id: pez.id,
+      name: nombres.get(pez.id) ?? nombreLegible(pez.id),
+      type: 'fish',
+      // El tier sale del prefijo del id: estos nodos no existen en el dump, así
+      // que no hay @tier que leer.
+      tier: Number(pez.id.match(/^T(\d)_/)?.[1]) || null,
+      item_power: null,
+      two_handed: false,
+      enchantments: {},
+      /*
+        Cuántos chuletones rinde esta pieza.
+
+        Va acá y no en `crafting` porque no es una receta para fabricar el pez:
+        es una propiedad del pez, igual que su tier. Y no se puede leer de la
+        receta de T1_FISHCHOPS en tiempo de ejecución porque esa receta tiene
+        treinta y ocho variantes —una por pez— y la columna guarda solo la
+        primera. Acá cada pez se lleva la suya.
+      */
+      stats: { chops: pez.chops },
+      // Un pez no se craftea, se pesca.
+      crafting: null,
+    })
+  }
+  console.log(`  ${peces} peces crudos, desde la receta de los chuletones`)
+
+  const conReceta = items.filter((i) => i.crafting).length
+  console.log(
+    `\n${items.length} ítems (${conReceta} con receta), ${itemSpells.length} vínculos ítem-hechizo.\n`,
+  )
 
   await insertarEnLotes('ítems', items, 500, (lote) =>
     supabase.from('items').upsert(lote, { onConflict: 'id' }),

@@ -13,6 +13,7 @@ const ENLACES_BASE: Enlace[] = [
   { href: '/panel', etiqueta: 'Panel' },
   { href: '/builds', etiqueta: 'Builds' },
   { href: '/rutas', etiqueta: 'Rutas' },
+  { href: '/mercado', etiqueta: 'Mercado' },
 ]
 
 /**

@@ -215,6 +215,7 @@ export type Database = {
       }
       items: {
         Row: {
+          crafting: Json | null
           enchantments: Json
           icon_ok: boolean
           id: string
@@ -226,6 +227,7 @@ export type Database = {
           type: Database["public"]["Enums"]["item_type"]
         }
         Insert: {
+          crafting?: Json | null
           enchantments?: Json
           icon_ok?: boolean
           id: string
@@ -237,6 +239,7 @@ export type Database = {
           type: Database["public"]["Enums"]["item_type"]
         }
         Update: {
+          crafting?: Json | null
           enchantments?: Json
           icon_ok?: boolean
           id?: string
@@ -518,6 +521,8 @@ export type Database = {
         | "bag"
         | "tool"
         | "other"
+        | "resource"
+        | "fish"
       marker_type: "transport" | "gank" | "objective"
       spell_slot: "Q" | "W" | "E" | "Passive"
       user_status: "pending" | "active" | "rejected"
@@ -672,6 +677,8 @@ export const Constants = {
         "bag",
         "tool",
         "other",
+        "resource",
+        "fish",
       ],
       marker_type: ["transport", "gank", "objective"],
       spell_slot: ["Q", "W", "E", "Passive"],

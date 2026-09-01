@@ -129,6 +129,19 @@ export function IconoLlave(props: Props) {
   )
 }
 
+/** Mercado. Balanza de dos platos: se compara lo que entra con lo que sale. */
+export function IconoBalanza(props: Props) {
+  return (
+    <Trazo {...props}>
+      <path d="M12 3.5v17" />
+      <path d="M6.5 21h11" />
+      <path d="M4 7.5h16" />
+      <path d="M4 7.5 1.5 14a3.5 3.5 0 0 0 5 0Z" />
+      <path d="M20 7.5 22.5 14a3.5 3.5 0 0 1-5 0Z" />
+    </Trazo>
+  )
+}
+
 // -----------------------------------------------------------------------------
 // Panel
 // -----------------------------------------------------------------------------

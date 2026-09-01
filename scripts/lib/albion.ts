@@ -56,22 +56,167 @@ export function tipoDeItem(
     return 'other'
   }
 
-  if (seccion === 'simpleitem') {
+  if (seccion === 'simpleitem' || seccion === 'farmableitem') {
+    const id = String(nodo['@uniquename'] ?? '')
+    if (esPescado(id)) return 'fish'
+
     const cat = String(nodo['@shopcategory'] ?? '')
     if (cat === 'tools') return 'tool'
+
+    /*
+      Todo lo que alguna receta consuma es un material, se llame como se llame.
+
+      La primera versión usaba una lista de nombres (ORE, METALBAR, CLOTH…).
+      Funcionaba para el mineral y la tela, pero dejaba afuera los artefactos y
+      los tokens de misión, que también se compran en el mercado y también son
+      ingredientes: la calculadora de crafteo terminaba mostrando
+      "T5_ARTEFACT_HEAD_PLATE_UNDEAD" crudo en la lista de materiales, porque el
+      ítem no estaba en el catálogo y no había nombre que mostrar.
+
+      Contra el dump, 1.472 ids aparecen como material y todos están definidos
+      en alguna sección. Se marca por uso y no por nombre: es la misma decisión
+      que con icon_ok, evidencia en vez de patrón.
+    */
+    if (MATERIALES_USADOS.has(id)) return 'resource'
+
     return 'other'
   }
 
   return 'other'
 }
 
-/** Secciones del dump que aportan ítems usables en una build. */
+/**
+ * Los ids que alguna receta consume.
+ *
+ * Lo llena recolectarMateriales() antes de clasificar, porque para saber si un
+ * ítem es material hay que haber leído TODAS las recetas primero.
+ */
+const MATERIALES_USADOS = new Set<string>()
+
+/** Recorre el dump entero y anota qué se usa como ingrediente. */
+export function recolectarMateriales(raw: Record<string, unknown>): number {
+  MATERIALES_USADOS.clear()
+
+  for (const seccion of Object.values(raw)) {
+    for (const nodo of comoArray(seccion as Record<string, unknown>[])) {
+      if (!nodo || typeof nodo !== 'object') continue
+
+      for (const variante of comoArray(
+        (nodo as Record<string, unknown>)['craftingrequirements'] as Record<
+          string,
+          unknown
+        >[],
+      )) {
+        for (const recurso of comoArray(
+          variante?.['craftresource'] as Record<string, unknown>[],
+        )) {
+          const id = String(recurso?.['@uniquename'] ?? '').trim()
+          if (id) MATERIALES_USADOS.add(id)
+        }
+      }
+    }
+  }
+
+  return MATERIALES_USADOS.size
+}
+
+/**
+ * Pescado y sus derivados.
+ *
+ * OJO: los peces crudos (T1_FISH_FRESHWATER_ALL_COMMON y compañía) NO están
+ * definidos como ítems en el dump —solo aparece el tiburón jefe—, pero sí
+ * existen en el mercado y sí figuran como ingrediente de los chuletones. Por
+ * eso el listado de peces no se saca de las secciones del dump sino de la
+ * receta de T1_FISHCHOPS, que es la fuente autorizada de qué se convierte en
+ * qué. Ver idsDePescado().
+ */
+export function esPescado(id: string): boolean {
+  return /^T[1-8]_FISH_/.test(id) || /^T\d+_(FISHCHOPS|FISHSAUCE)/.test(id)
+}
+
+/** Secciones del dump que aportan ítems al catálogo. */
 export const SECCIONES_ITEMS = [
   'weapon',
   'equipmentitem',
   'consumableitem',
   'mount',
+  // Materiales y pescado: no se equipan, pero sin ellos no se puede calcular
+  // cuánto cuesta craftear ni cuánto rinde pescar.
+  'simpleitem',
+  'farmableitem',
 ] as const
+
+// -----------------------------------------------------------------------------
+// Recetas
+// -----------------------------------------------------------------------------
+
+export type Receta = {
+  silver: number
+  focus: number
+  /** Unidades que salen de una tanda. Casi siempre 1; en la comida, más. */
+  amount: number
+  resources: { id: string; count: number }[]
+}
+
+/**
+ * Receta de un ítem, o null si no se craftea.
+ *
+ * `craftingrequirements` puede ser un objeto o un arreglo: los ítems con varias
+ * formas de fabricarse (los chuletones, que aceptan pescado de cualquier tier)
+ * traen una entrada por variante. Se toma la primera, que es la del tier más
+ * bajo, y las demás se ignoran: mezclarlas daría un costo que no corresponde a
+ * ninguna receta real.
+ */
+export function recetaDeItem(nodo: Record<string, unknown>): Receta | null {
+  const crudo = nodo['craftingrequirements'] as unknown
+  const primera = comoArray(crudo as Record<string, unknown>[])[0]
+  if (!primera) return null
+
+  const recursos = comoArray(primera['craftresource'] as Record<string, unknown>[])
+    .map((r) => ({
+      id: String(r['@uniquename'] ?? '').trim(),
+      count: Number(r['@count'] ?? 0),
+    }))
+    .filter((r) => r.id && r.count > 0)
+
+  // Una receta sin materiales no sirve para calcular nada.
+  if (recursos.length === 0) return null
+
+  return {
+    silver: Number(primera['@silver'] ?? 0) || 0,
+    focus: Number(primera['@craftingfocus'] ?? 0) || 0,
+    amount: Number(primera['@amountcrafted'] ?? 1) || 1,
+    resources: recursos,
+  }
+}
+
+/**
+ * Los peces crudos, sacados de la receta de los chuletones.
+ *
+ * Es la única lista completa que hay: el dump no define los peces como ítems,
+ * pero la receta de T1_FISHCHOPS enumera uno por tier, y cada variante declara
+ * cuántos chuletones salen de él.
+ */
+export function idsDePescado(
+  raw: Record<string, unknown>,
+): { id: string; chops: number }[] {
+  const simples = comoArray(
+    (raw as { simpleitem?: Record<string, unknown>[] }).simpleitem,
+  )
+  const chops = simples.find((x) => x['@uniquename'] === 'T1_FISHCHOPS')
+  if (!chops) return []
+
+  const salida: { id: string; chops: number }[] = []
+  for (const variante of comoArray(
+    chops['craftingrequirements'] as Record<string, unknown>[],
+  )) {
+    const recurso = comoArray(variante['craftresource'] as Record<string, unknown>[])[0]
+    const id = String(recurso?.['@uniquename'] ?? '').trim()
+    if (!id) continue
+    salida.push({ id, chops: Number(variante['@amountcrafted'] ?? 1) || 1 })
+  }
+  return salida
+}
 
 // -----------------------------------------------------------------------------
 // Slots de hechizo

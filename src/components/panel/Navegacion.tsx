@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import type { ComponentType, SVGProps } from 'react'
 
 import {
+  IconoBalanza,
   IconoEscudo,
   IconoEspada,
   IconoLlave,
@@ -25,6 +26,7 @@ const ICONOS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   '/panel': IconoEscudo,
   '/builds': IconoEspada,
   '/rutas': IconoMapa,
+  '/mercado': IconoBalanza,
   '/admin': IconoLlave,
 }
 
