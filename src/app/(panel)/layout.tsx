@@ -58,9 +58,18 @@ export default async function PanelLayout({
       <Heartbeat />
       <CacheDeIconos />
 
-      {/* La cabecera es la puerta del keep: borde de oro abajo, piedra
-          translúcida y el blasón del gremio a la izquierda. */}
-      <header className="sticky top-0 z-40 border-b border-borde-suave bg-fondo/85 shadow-[0_1px_0_oklch(0.78_0.135_80/0.12)] backdrop-blur">
+      {/*
+        La cabecera es la puerta del keep: borde de oro abajo y el blasón a la
+        izquierda.
+
+        Va OPACA y sin backdrop-blur. Un desenfoque en una barra fija obliga al
+        navegador a volver a muestrear y desenfocar todo lo que pasa por detrás
+        en CADA cuadro del scroll, y es la causa más común de que una página se
+        sienta pesada al deslizar. Comparando las dos versiones sobre esta
+        paleta —que ya es casi negra— la diferencia visual es mínima: el fondo
+        translúcido no dejaba ver nada interesante detrás.
+      */}
+      <header className="sticky top-0 z-40 border-b border-borde-suave bg-fondo shadow-[0_1px_0_oklch(0.78_0.135_80/0.12)]">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:gap-5 sm:px-8">
           <Link
             href="/panel"

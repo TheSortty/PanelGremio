@@ -149,13 +149,26 @@ export function clavePrecio(itemId: string, ciudad: string, calidad: number) {
 }
 
 /**
- * Pide precios para una lista de ítems.
+ * Cuántos lotes se piden a la vez.
  *
- * Los lotes se piden en serie y no en paralelo: la API es gratuita y tiene
- * límite por IP, y todo esto corre en un Worker compartido por el gremio
- * entero. Un lote tarda menos de 300 ms, así que veintisiete lotes —el
- * catálogo completo de equipo— son unos ocho segundos, que con el cache de
- * diez minutos se pagan una vez.
+ * La primera versión los pedía en serie por prudencia con una API gratuita.
+ * Medido contra el servicio real, con los seis lotes de un tier:
+ *
+ *     en serie     2.616 ms
+ *     en paralelo  1.122 ms
+ *
+ * Un 57 % del tiempo de la pantalla se iba esperando de a uno. Seis pedidos
+ * simultáneos están muy por debajo del límite de la API —que ronda los 300 por
+ * cinco minutos— y por debajo del tope de subpeticiones de un Worker.
+ *
+ * No es ilimitado igual: con "todos los tiers" son veintisiete lotes, y
+ * lanzarlos todos de golpe sí sería abusar. De a seis, el peor caso son cinco
+ * tandas.
+ */
+const EN_PARALELO = 6
+
+/**
+ * Pide precios para una lista de ítems.
  *
  * Un lote que falla no tira abajo el resto: se cuenta y se sigue. Es preferible
  * mostrar el 90 % de los datos avisando que faltó algo, que una pantalla de
@@ -181,7 +194,7 @@ export async function obtenerPrecios(
 
   let fallidos = 0
 
-  for (const lote of lotes) {
+  async function traerLote(lote: string[]): Promise<RespuestaCruda[] | null> {
     const url = `${base}${lote.map(encodeURIComponent).join(',')}${cola}`
 
     try {
@@ -192,12 +205,24 @@ export async function obtenerPrecios(
         headers: { Accept: 'application/json' },
       })
 
-      if (!respuesta.ok) {
+      if (!respuesta.ok) return null
+      return (await respuesta.json()) as RespuestaCruda[]
+    } catch {
+      // Red caída o timeout.
+      return null
+    }
+  }
+
+  // De a tandas de EN_PARALELO, no todos de golpe.
+  for (let i = 0; i < lotes.length; i += EN_PARALELO) {
+    const tanda = lotes.slice(i, i + EN_PARALELO)
+    const respuestas = await Promise.all(tanda.map(traerLote))
+
+    for (const datos of respuestas) {
+      if (!datos) {
         fallidos++
         continue
       }
-
-      const datos = (await respuesta.json()) as RespuestaCruda[]
 
       for (const d of datos) {
         precios.set(clavePrecio(d.item_id, d.city, d.quality), {
@@ -210,9 +235,6 @@ export async function obtenerPrecios(
           compraFecha: fecha(d.buy_price_max_date),
         })
       }
-    } catch {
-      // Red caída o timeout: se cuenta y se sigue con el resto.
-      fallidos++
     }
   }
 

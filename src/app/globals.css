@@ -137,6 +137,21 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
+    /*
+      Las dos capas decorativas se promueven a su propia capa de composición.
+
+      Sin esto son capas fijas a pantalla completa que el navegador vuelve a
+      PINTAR en cada cuadro mientras el contenido pasa por debajo: un degradado
+      radial de 60 rem y una textura de ruido no son baratos de repintar sesenta
+      veces por segundo. Con transform e isolation pasan a ser una textura que
+      la GPU solo vuelve a componer, que es prácticamente gratis.
+
+      `contain: strict` le promete al navegador que nada de acá adentro afecta
+      al layout de afuera, así que puede saltearse el cálculo por completo.
+    */
+    transform: translateZ(0);
+    will-change: transform;
+    contain: strict;
     background:
       radial-gradient(
         60rem 32rem at 50% -8rem,
@@ -156,6 +171,9 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
+    transform: translateZ(0);
+    will-change: transform;
+    contain: strict;
     opacity: 0.035;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
   }

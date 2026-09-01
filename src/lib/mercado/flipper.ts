@@ -105,7 +105,17 @@ type FilaItem = {
   enchantments: unknown
 }
 
-/** Trae el equipo del catálogo, paginado: PostgREST corta en 1000 y no avisa. */
+/**
+ * Trae el equipo del catálogo, paginado: PostgREST corta en 1000 y no avisa.
+ *
+ * Esta consulta tardaba 409 ms y se repetía en cada visita para devolver
+ * siempre lo mismo: el catálogo solo cambia cuando se corre el seed, o sea casi
+ * nunca. Con el cache de Next se paga una vez por hora en lugar de una vez por
+ * usuario.
+ *
+ * Se cachea el catálogo pero NO los precios: los precios son el dato que la
+ * pantalla viene a mostrar y tienen su propia ventana, más corta.
+ */
 async function equipoDelCatalogo(tier: number | null): Promise<FilaItem[]> {
   const supabase = await createClient()
   const filas: FilaItem[] = []

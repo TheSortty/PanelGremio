@@ -1,0 +1,27 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "Panel del Gremio" [level=1] [ref=e8]
+        - paragraph [ref=e9]: Se requiere autorización para continuar.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - button "Continuar con Discord" [ref=e12]
+          - link "Continuar con Steam" [ref=e15] [cursor=pointer]:
+            - /url: /auth/steam
+        - generic [ref=e18]: o con tu correo
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Correo
+            - textbox "Correo" [ref=e25]:
+              - /placeholder: vos@ejemplo.com
+          - generic [ref=e26]:
+            - generic [ref=e27]: Contraseña
+            - textbox "Contraseña" [ref=e28]:
+              - /placeholder: ••••••••
+          - button "Entrar" [ref=e29]
+          - paragraph [ref=e30]:
+            - text: ¿No tenés cuenta?
+            - button "Registrate" [ref=e31]
+      - paragraph [ref=e32]: Las cuentas nuevas necesitan la aprobación de un administrador antes de poder entrar al panel.
+  - alert [ref=e33]
