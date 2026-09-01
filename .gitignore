@@ -42,3 +42,6 @@ npm-debug.log*
 .wrangler
 .dev.vars*
 !.dev.vars.example
+
+# Capturas y snapshots de las pruebas con navegador.
+/.playwright-mcp/
