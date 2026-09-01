@@ -93,6 +93,42 @@ async function main() {
   })
   check('NO puede crear rutas', !!eCrear, eCrear?.message ?? 'la dejó pasar')
 
+  // ---- Las capturas de otro no se tocan ----
+  //
+  // El bucket es privado y las políticas exigen que la primera carpeta del path
+  // sea el uid de quien escribe. Sin eso, cualquiera con sesión podría subir
+  // sobre la carpeta de otro o leerle las fotos de la cuenta.
+  const { data: otros } = await admin
+    .from('applications')
+    .select('profile_id, captura_stats')
+    .neq('profile_id', id)
+    .limit(1)
+
+  const ajena = otros?.[0]
+  if (ajena) {
+    const { data: bajada, error: eBajada } = await s.storage
+      .from('solicitudes')
+      .download(ajena.captura_stats)
+    check('NO lee la captura de otro', !bajada && !!eBajada, eBajada?.message ?? 'la bajó')
+
+    const { error: eEscritura } = await s.storage
+      .from('solicitudes')
+      .upload(`${ajena.profile_id}/stats.png`, new Blob([new Uint8Array([1, 2, 3])]), {
+        contentType: 'image/png',
+        upsert: true,
+      })
+    check('NO escribe en la carpeta de otro', !!eEscritura, eEscritura?.message ?? 'escribió')
+
+    const { data: solicitudAjena } = await s
+      .from('applications')
+      .select('id')
+      .eq('profile_id', ajena.profile_id)
+      .maybeSingle()
+    check('NO lee la solicitud de otro', !solicitudAjena)
+  } else {
+    console.log('  (sin otra solicitud cargada; se omiten las de capturas)')
+  }
+
   // Después de que un admin lo aprueba, sí.
   const adminSesion = createClient(URL, ANON)
   await adminSesion.auth.signInWithPassword({

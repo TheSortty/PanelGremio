@@ -10,6 +10,7 @@ import {
   eliminarUsuario,
   transferirLiderazgo,
 } from '@/actions/usuarios'
+import { FichaSolicitud } from '@/components/admin/FichaSolicitud'
 import { Aviso } from '@/components/ui/Aviso'
 import { Boton } from '@/components/ui/Boton'
 import { Card } from '@/components/ui/Card'
@@ -24,6 +25,7 @@ import {
   type GuildRole,
   type UserStatus,
 } from '@/lib/domain/roles'
+import type { Solicitud } from '@/lib/domain/solicitud'
 import { cn } from '@/lib/utils/cn'
 import { fechaCorta, tiempoRelativo } from '@/lib/utils/formato'
 
@@ -54,11 +56,17 @@ export function TablaUsuarios({
   filtroActual,
   idAdmin,
   rolAdmin,
+  solicitudes,
+  capturas,
 }: {
   usuarios: Usuario[]
   filtroActual: string
   idAdmin: string
   rolAdmin: GuildRole
+  /** Solicitud de cada postulante, indexada por id de perfil. */
+  solicitudes: Record<string, Solicitud>
+  /** Ruta en el bucket -> URL firmada, para mostrar las capturas. */
+  capturas: Record<string, string>
 }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -173,6 +181,14 @@ export function TablaUsuarios({
 
                       <td className="py-2.5">
                         <div className="flex justify-end gap-1.5">
+                          {/* La solicitud primero: se lee ANTES de decidir. */}
+                          {solicitudes[usuario.id] && (
+                            <FichaSolicitud
+                              nombre={usuario.name}
+                              solicitud={solicitudes[usuario.id]!}
+                              capturas={capturas}
+                            />
+                          )}
                           {usuario.status !== 'active' && (
                             <Boton
                               tamano="sm"

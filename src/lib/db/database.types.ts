@@ -72,6 +72,78 @@ export type Database = {
           },
         ]
       }
+      applications: {
+        Row: {
+          actualizada_en: string
+          captura_perfil: string
+          captura_stats: string
+          contenido: string[]
+          cuenta: Database["public"]["Enums"]["tipo_cuenta"]
+          discord: string | null
+          dispositivo: Database["public"]["Enums"]["dispositivo_juego"]
+          edad: number
+          enviada_en: string
+          gremio_anterior: string | null
+          horario: string
+          id: string
+          profile_id: string
+          quien_lo_trajo: string | null
+          rol_juego_principal: string
+          rol_juego_secundario: string | null
+        }
+        Insert: {
+          actualizada_en?: string
+          captura_perfil: string
+          captura_stats: string
+          contenido?: string[]
+          cuenta: Database["public"]["Enums"]["tipo_cuenta"]
+          discord?: string | null
+          dispositivo: Database["public"]["Enums"]["dispositivo_juego"]
+          edad: number
+          enviada_en?: string
+          gremio_anterior?: string | null
+          horario: string
+          id?: string
+          profile_id: string
+          quien_lo_trajo?: string | null
+          rol_juego_principal: string
+          rol_juego_secundario?: string | null
+        }
+        Update: {
+          actualizada_en?: string
+          captura_perfil?: string
+          captura_stats?: string
+          contenido?: string[]
+          cuenta?: Database["public"]["Enums"]["tipo_cuenta"]
+          discord?: string | null
+          dispositivo?: Database["public"]["Enums"]["dispositivo_juego"]
+          edad?: number
+          enviada_en?: string
+          gremio_anterior?: string | null
+          horario?: string
+          id?: string
+          profile_id?: string
+          quien_lo_trajo?: string | null
+          rol_juego_principal?: string
+          rol_juego_secundario?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "guild_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -501,6 +573,7 @@ export type Database = {
       }
     }
     Enums: {
+      dispositivo_juego: "PC" | "Móvil" | "Tablet"
       guild_role:
         | "Maestro del Gremio"
         | "Mano Derecha"
@@ -525,6 +598,7 @@ export type Database = {
         | "fish"
       marker_type: "transport" | "gank" | "objective"
       spell_slot: "Q" | "W" | "E" | "Passive"
+      tipo_cuenta: "primera" | "segunda"
       user_status: "pending" | "active" | "rejected"
     }
     CompositeTypes: {
@@ -656,6 +730,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      dispositivo_juego: ["PC", "Móvil", "Tablet"],
       guild_role: [
         "Maestro del Gremio",
         "Mano Derecha",
@@ -682,6 +757,7 @@ export const Constants = {
       ],
       marker_type: ["transport", "gank", "objective"],
       spell_slot: ["Q", "W", "E", "Passive"],
+      tipo_cuenta: ["primera", "segunda"],
       user_status: ["pending", "active", "rejected"],
     },
   },

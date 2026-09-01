@@ -1,6 +1,7 @@
 import { TablaUsuarios } from '@/components/admin/TablaUsuarios'
 import { Aviso } from '@/components/ui/Aviso'
 import { exigirAdmin } from '@/lib/auth/sesion'
+import { firmarCapturas, obtenerSolicitudes } from '@/lib/data/solicitudes'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata = { title: 'Usuarios' }
@@ -38,12 +39,31 @@ export default async function Admin({
     return <Aviso tono="error">No pudimos cargar los usuarios: {error.message}</Aviso>
   }
 
+  /*
+    Las solicitudes de los que están en pantalla, y las URLs firmadas de sus
+    capturas.
+
+    Se firman en el servidor y para esta visita: el bucket es privado, así que
+    no hay una URL permanente que se pueda pegar en un chat. Duran cinco
+    minutos, que alcanza para revisar y no para repartir.
+  */
+  const ids = (usuarios ?? []).map((u) => u.id)
+  const solicitudes = await obtenerSolicitudes(ids)
+
+  const rutas = [...solicitudes.values()].flatMap((s) => [
+    s.captura_stats,
+    s.captura_perfil,
+  ])
+  const capturas = await firmarCapturas(rutas)
+
   return (
     <TablaUsuarios
         usuarios={usuarios ?? []}
         filtroActual={filtro}
         idAdmin={admin.id}
       rolAdmin={admin.role}
+      solicitudes={Object.fromEntries(solicitudes)}
+      capturas={Object.fromEntries(capturas)}
     />
   )
 }
